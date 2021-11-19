@@ -1,0 +1,18 @@
+# documentation: https://help.github.com/en/articles/workflow-syntax-for-github-actions
+name: build paper
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: Install Python packages
+      run: |
+          pip install -r requirements.txt
+    - name: Compile LaTeX document
+      uses: xu-cheng/latex-action@v2
+      with:
+        root_file: archspec_paper.tex
+        args: "-output-directory=build -pdf"
+        latexmk_shell_escape: true
