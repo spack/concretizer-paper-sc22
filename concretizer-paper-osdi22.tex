@@ -60,29 +60,9 @@
 \usepackage{inconsolata}
 \usepackage[outputdir=build]{minted}
 
-% inlined bib file
-\usepackage{filecontents}
 
-%-------------------------------------------------------------------------------
-\begin{filecontents}{\jobname.bib}
-%-------------------------------------------------------------------------------
-@Book{arpachiDusseau18:osbook,
-  author =       {Arpaci-Dusseau, Remzi H. and Arpaci-Dusseau Andrea C.},
-  title =        {Operating Systems: Three Easy Pieces},
-  publisher =    {Arpaci-Dusseau Books, LLC},
-  year =         2015,
-  edition =      {1.00},
-  note =         {\url{http://pages.cs.wisc.edu/~remzi/OSTEP/}}
-}
-@InProceedings{waldspurger02,
-  author =       {Waldspurger, Carl A.},
-  title =        {Memory resource management in {VMware ESX} server},
-  booktitle =    {USENIX Symposium on Operating System Design and
-                  Implementation (OSDI)},
-  year =         2002,
-  pages =        {181--194},
-  note =         {\url{https://www.usenix.org/legacy/event/osdi02/tech/waldspurger/waldspurger.pdf}}}
-\end{filecontents}
+% notes for different people
+\newcommand{\tg}[1]{\ifisdraft{\color{blue}[#1 -- Todd]}\fi}
 
 %-------------------------------------------------------------------------------
 \begin{document}
@@ -121,7 +101,7 @@ Not more than 200 words, if possible, and preferably closer to 150.
 %-------------------------------------------------------------------------------
 \section{Introduction}
 %-------------------------------------------------------------------------------
-
+- Todd
 {\tt this is some monospace stuff.}
 
 A paragraph of text goes here. Lots of text. Plenty of interesting
@@ -132,39 +112,87 @@ text text text text text text text.
 More fascinating text. Features galore, plethora of promises.
 
 %-------------------------------------------------------------------------------
-\section{Answer Set Programming}
-%-------------------------------------------------------------------------------
-Background on ASP solvers
-
-
-%-------------------------------------------------------------------------------
 \section{Package Managers}
 %-------------------------------------------------------------------------------
+-- Todd
 Background on different kinds of package managers, highlighting commonalities and differences (e.g. conda, Go, system package managers). Introduce Spack and explain how it is different from others.
 
 %-------------------------------------------------------------------------------
-\section{Spack Dependency Model}
+\section{Spack}
 %-------------------------------------------------------------------------------
+-- Greg
+\subsection{Spec Syntax}
+
+\subsection{Package DSL}
+
+\subsection{Concretization}
+- user configuration
+- CLI arguments
+- package constraints
+
+\subsection{Dependency Model}
 Discuss the software dependency model used in Spack and the future roadmap. Introduce concepts like variants, ABI compatibility etc. that are either implicit or disregarded by other package managers.
 
 
 %-------------------------------------------------------------------------------
+\section{Answer Set Programming}
+%-------------------------------------------------------------------------------
+-- Todd
+Background on ASP solvers
+
+%-------------------------------------------------------------------------------
 \section{Modeling Software Dependencies with ASP}
 %-------------------------------------------------------------------------------
+-- Max
 Time to explain concretize.lp
+
+\subsection{Simple Examples}
+- avoiding cycles
+- specializing BLAS
+- conditional variants -- ROCM/CUDA
+
+- Generalized Condition Handling
+  - examples of: conflicts, virtuals, dependencies, variants
+
+\section{Reusing installed packages}
+Max / Todd
+\subsection{reuse in nix, guix, conan, and old spack}
+- by hash
+
+\subsection{optimizing for reuse}
+- reuse of half the generalized condition
+- Reusing built dependencies
+
+\subsection{optimizing for reuse}
+- architecting optimization criteria for builds vs. reuse
 
 %-------------------------------------------------------------------------------
 \section{Error Handling for Unsolvable Problems}
 %-------------------------------------------------------------------------------
+Greg
 How do we want to perform error handling?
 
 
 %-------------------------------------------------------------------------------
 \section{Performance Results}
 %-------------------------------------------------------------------------------
+Sergei
+
+
+\subsection{Solve timings for all packages}
+- Time vs. number of dependnecies
+- other properties?
+- --single-shot vs. no single-shot?
+- different tactics?
+
+\subsection{Solve timings for all packages with reuse}
+- scaling repo size
+
+
 How is the ASP based solver performing?
 
 \section{Conclusions}
+- TBD
 A paragraph of text goes here. Lots of text. Plenty of interesting
 text. Text text text text text text text text text text text text text
 text text text text text text text text text text text text text text
@@ -175,7 +203,6 @@ More fascinating text. Features galore, plethora of promises.
 %-------------------------------------------------------------------------------
 \section*{Acknowledgments}
 %-------------------------------------------------------------------------------
-
 The USENIX latex style is old and very tired, which is why
 there's no \textbackslash{}acks command for you to use when
 acknowledging. Sorry.
@@ -190,8 +217,13 @@ or data available, it's worth mentioning this fact in a dedicated
 section.
 
 %-------------------------------------------------------------------------------
-\bibliographystyle{plain}
-\bibliography{\jobname}
+% References
+%-------------------------------------------------------------------------------
+{
+   \footnotesize
+   \bibliographystyle{abbrv}
+   \bibliography{\jobname}
+}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
