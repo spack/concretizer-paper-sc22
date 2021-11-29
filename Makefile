@@ -1,6 +1,8 @@
+name=concretizer-paper-osdi22
+
 all: clean
-	@mkdir -p build
-	latexmk -shell-escape -pdf -output-directory=build clingo_paper.tex
+	latexmk $(name).tex
+	cp build/$(name).pdf .
 
 clean:
-	rm -rf build/*
+	rm -rf build/* $(name).pdf

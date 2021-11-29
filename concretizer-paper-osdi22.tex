@@ -40,11 +40,11 @@
 %     this file to be compiled. (And changing refs style to 'plain'.)
 %
 %   * Make template self-contained in terms of figures, to
-%     allow this file to be compiled. 
+%     allow this file to be compiled.
 %
 %   * Added packages for hyperref, embedding fonts, and improving
 %     appearance.
-%   
+%
 %   * Removed outdated text.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,6 +55,10 @@
 % to be able to draw some self-contained figs
 \usepackage{tikz}
 \usepackage{amsmath}
+
+% use for decent code formatting
+\usepackage{inconsolata}
+\usepackage[outputdir=build]{minted}
 
 % inlined bib file
 \usepackage{filecontents}
@@ -117,6 +121,8 @@ Not more than 200 words, if possible, and preferably closer to 150.
 %-------------------------------------------------------------------------------
 \section{Introduction}
 %-------------------------------------------------------------------------------
+
+{\tt this is some monospace stuff.}
 
 A paragraph of text goes here. Lots of text. Plenty of interesting
 text. Text text text text text text text text text text text text text
