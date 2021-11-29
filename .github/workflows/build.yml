@@ -13,6 +13,5 @@ jobs:
     - name: Compile LaTeX document
       uses: xu-cheng/latex-action@v2
       with:
-        root_file: clingo_paper.tex
-        args: "-output-directory=build -pdf"
+        root_file: concretizer-paper-osdi22.tex
         latexmk_shell_escape: true
