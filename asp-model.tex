@@ -1,10 +1,79 @@
--- Max
-Time to explain concretize.lp
+At a high-level, with the introduction of \clingo, each concretization
+combines:
+\begin{enumerate}
+\item A large number of \emph{facts} characterizing the specific problem being solved
+\item A small \emph{logic program} encoding the rules and constraints of the software model
+\end{enumerate}
+The facts are always generated starting from one or more 
+\emph{root specs} that need to be concretized, and they account 
+for both the metadata contained in package recipes and the 
+current state of \spack{} in terms of configuration and 
+installed software.
+For instance, a simple directive such as:
+\begin{minted}[fontsize=\small, bgcolor=bg]{python}
+version('1.2.11', sha256='ah45rstgef...')
+\end{minted}
+in \texttt{zlib}'s recipe is translated to the following fact:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+version_declared("zlib", "1.2.11", 0, "package_py").
+\end{minted}
+in our ASP solve. Similarly, the request to concretize
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+zlib@1.2.11
+\end{minted}
+generates the following three facts:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+root("zlib").
+node("zlib").
+version_satisfies("zlib","1.2.11").
+\end{minted}
+stating that \texttt{zlib} is a root node and should satisfy
+a version requirement.
+A typical solve has around $10k-100k$ facts which include
+the encoding of dependencies, variants, preferences, etc.
 
-\subsection{Simple Examples}
-- avoiding cycles
-- specializing BLAS
-- conditional variants -- ROCM/CUDA
+The logic program encodes the software model used by \spack{}
+and is solely composed by first-order rules, integrity 
+constraints and optimization objectives. 
+The declarative nature of ASP makes it easy to enforce 
+certain properties on the optimal solution. For instance, 
+these three lines ensure that we never have a cyclic dependency
+in a DAG:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+path(A, B) :- depends_on(A, B).
+path(A, C) :- path(A, B), depends_on(B, C).
+:- path(A, B), path(B, A).
+\end{minted}
+The first rule establish the base case: if \texttt{A} depends
+on \texttt{B} there is a path from \texttt{A} to \texttt{B}.
+The second rule defines paths to transitive dependencies 
+with a recursive definition: if there is a path from \texttt{A} 
+to \texttt{B} and \texttt{B} depends on \texttt{C}, there is
+a path from \texttt{A} to \texttt{C}. The final line is an 
+\emph{integrity constraints} stating that paths from \texttt{A} 
+to \texttt{B} and paths from \texttt{B} to \texttt{A} cannot 
+occur at the same time in a valid solution.
 
-- Generalized Condition Handling
+To give a rough idea of the compactness and expressiveness of 
+the ASP encoding, the entire logic program for the software 
+model described in Section~\ref{sec:software-model} is around 
+$500$ lines of code. From the point of view of the application, 
+the concretization process is also straightforward to follow
+conceptually:
+\begin{enumerate}
+\item Facts are generated for the current concretization
+\item The logic program and the facts are sent to the solver
+\item The concretized DAG is rebuilt from the result
+\end{enumerate}
+Finally, it's worth stressing that the logic program changes only
+when the underlying software model changes, as opposed 
+to the generated facts that are different whenever the root
+spec to be concretized or \spack's configuration changes.
+
+\subsection{Optimization Objectives}
+
+\subsection{Generalized Condition Handling}
   - examples of: conflicts, virtuals, dependencies, variants
+
+\subsection{Example: Specialize LAPACK Providers}
+\subsection{Example: CUDA/RoCM Conditional Variants}

@@ -64,8 +64,9 @@
 
 % notes for different people
 \newcommand{\tg}[1]{\ifisdraft{\color{blue}[#1 -- Todd]}\fi}
-\newcommand{\spack}{\texttt{Spack} }
-
+\newcommand{\spack}{\texttt{Spack}}
+\newcommand{\clingo}{\texttt{clingo}}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
 %-------------------------------------------------------------------------------
 \begin{document}
 %-------------------------------------------------------------------------------
@@ -121,6 +122,7 @@ Background on different kinds of package managers, highlighting commonalities an
 
 %-------------------------------------------------------------------------------
 \section{\spack}
+\label{sec:software-model}
 %-------------------------------------------------------------------------------
 -- Greg
 \subsection{Spec Syntax}
@@ -145,7 +147,7 @@ Background on ASP solvers
 %-------------------------------------------------------------------------------
 \section{Modeling Software Dependencies with ASP}
 %-------------------------------------------------------------------------------
-
+\label{sec:asp-model}
 \input{asp-model.tex}
 
 
