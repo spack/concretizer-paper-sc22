@@ -64,6 +64,7 @@
 
 % notes for different people
 \newcommand{\tg}[1]{\ifisdraft{\color{blue}[#1 -- Todd]}\fi}
+\newcommand{\spack}{\texttt{Spack} }
 
 %-------------------------------------------------------------------------------
 \begin{document}
@@ -116,10 +117,10 @@ More fascinating text. Features galore, plethora of promises.
 \section{Package Managers}
 %-------------------------------------------------------------------------------
 -- Todd
-Background on different kinds of package managers, highlighting commonalities and differences (e.g. conda, Go, system package managers). Introduce Spack and explain how it is different from others.
+Background on different kinds of package managers, highlighting commonalities and differences (e.g. conda, Go, system package managers). Introduce \spack and explain how it is different from others.
 
 %-------------------------------------------------------------------------------
-\section{Spack}
+\section{\spack}
 %-------------------------------------------------------------------------------
 -- Greg
 \subsection{Spec Syntax}
@@ -132,7 +133,7 @@ Background on different kinds of package managers, highlighting commonalities an
 - package constraints
 
 \subsection{Dependency Model}
-Discuss the software dependency model used in Spack and the future roadmap. Introduce concepts like variants, ABI compatibility etc. that are either implicit or disregarded by other package managers.
+Discuss the software dependency model used in \spack and the future roadmap. Introduce concepts like variants, ABI compatibility etc. that are either implicit or disregarded by other package managers.
 
 
 %-------------------------------------------------------------------------------
@@ -144,20 +145,14 @@ Background on ASP solvers
 %-------------------------------------------------------------------------------
 \section{Modeling Software Dependencies with ASP}
 %-------------------------------------------------------------------------------
--- Max
-Time to explain concretize.lp
 
-\subsection{Simple Examples}
-- avoiding cycles
-- specializing BLAS
-- conditional variants -- ROCM/CUDA
+\input{asp-model.tex}
 
-- Generalized Condition Handling
-  - examples of: conflicts, virtuals, dependencies, variants
+
 
 \section{Reusing installed packages}
 Max / Todd
-\subsection{reuse in nix, guix, conan, and old spack}
+\subsection{reuse in nix, guix, conan, and old \spack}
 - by hash
 
 \subsection{optimizing for reuse}
