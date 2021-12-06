@@ -44,7 +44,7 @@ path(A, B) :- depends_on(A, B).
 path(A, C) :- path(A, B), depends_on(B, C).
 :- path(A, B), path(B, A).
 \end{minted}
-The first rule establish the base case: if \texttt{A} depends
+The first rule establishes the base case: if \texttt{A} depends
 on \texttt{B} there is a path from \texttt{A} to \texttt{B}.
 The second rule defines paths to transitive dependencies 
 with a recursive definition: if there is a path from \texttt{A} 
@@ -57,23 +57,103 @@ occur at the same time in a valid solution.
 To give a rough idea of the compactness and expressiveness of 
 the ASP encoding, the entire logic program for the software 
 model described in Section~\ref{sec:software-model} is around 
-$500$ lines of code. From the point of view of the application, 
-the concretization process is also straightforward to follow
-conceptually:
+$500$ lines of code. The concretization process is straightforward
+to follow conceptually within \spack:
 \begin{enumerate}
-\item Facts are generated for the current concretization
+\item Facts are generated for the current concretization \footnotemark
 \item The logic program and the facts are sent to the solver
-\item The concretized DAG is rebuilt from the result
+\item The concretized DAG is rebuilt from the \emph{optimal} result
 \end{enumerate}
-Finally, it's worth stressing that the logic program changes only
+\footnotetext{It's worth stressing that the logic program changes only
 when the underlying software model changes, as opposed 
 to the generated facts that are different whenever the root
-spec to be concretized or \spack's configuration changes.
+spec to be concretized or \spack's configuration changes.}
+The word ``optimal'' is emphasized since, while rules and integrity 
+constraints fully determine if a solution is valid, we need 
+optimization targets to select one of the many possible solutions
+in a way that fits user's expectations.
 
-\subsection{Optimization Objectives}
+A good example to illustrate this point is target selection for DAG nodes.
+In \spack{} each node being built has a target microarchitecture associated with it, and we want to use the best target possible while respecting the constraints coming from the compiler (some compilers don't support generating code for some targets) and from the configuration. 
+Previously this required some complicated logic mixed with the rest of the solve.
+The introduction of \clingo{} simplified the problem definition by a great amount. A cardinality constraint is used to express that each node must have one and only one target:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+1 { node_target(Package, Target) : 
+    target(Target) } 1 :- node(Package).
+\end{minted}
+A rule ensures that the user's choice to set the target to a specific value is respected:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+node_target(P, T) :- node(P), node_target_set(P, T).
+\end{minted}
+An integrity constraints prevents to choose a target not supported by the current compiler:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+:- node_target(P, T),
+   not compiler_supports_target(C, V, T),
+   node_compiler(P, C),
+   node_compiler_version(P, C, V).
+\end{minted}
+These three statements fully describe the characteristics of a valid solution. To pick the \emph{optimal} solution we also \emph{weight} the possible targets
+(the lower the weight, the best the target) and optimize over the sum of target weights:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+node_target_weight(P, W) :- 
+  node(P), node_target(P, T), target_weight(T, W).
+#minimize { W@5,P : node_target_weight(P, W) }.
+\end{minted}
 
 \subsection{Generalized Condition Handling}
-  - examples of: conflicts, virtuals, dependencies, variants
+A peculiar feature of \spack, as a package manager, is that it doesn't only optimize for versions but for many other aspects of the build as well e.g. which compiler to use, which microarchitecture to target, etc. 
+The DSL used for package recipes reflects this complexity by having multiple directives to declare different properties or constraints for each software, as seen in Section~REFMISSING. 
+
+One interesting abstraction, that we observed while coding the ASP logic program, is that each of these directives can be seen as a way to impose additional constraints on the solution, conditional on other constraints 
+being met. For instance, the following directive in a package:
+\begin{minted}[fontsize=\small, bgcolor=bg]{python}
+depends_on('hdf5+mpi', when='+mpi')
+\end{minted}
+means that, if the spec has the \texttt{mpi} variant turned on, then it depends on \texttt{hdf5+mpi}. Similarly:
+\begin{minted}[fontsize=\small, bgcolor=bg]{python}
+provides('lapack', when='@12.0:')
+\end{minted}
+means that a package provides the \texttt{LAPACK} API starting at version $12.0$.
+This property allowed to encode all the directives as \emph{generalized conditions}, where most of the sematics is encoded abstractly in a few lines of the logic program.
+
+Getting back to a simple example, the snippet below:
+\begin{minted}[fontsize=\small, bgcolor=bg]{python}
+class H5utils(AutotoolsPackage):
+    depends_on('png@1.6.0:', when='+png')
+\end{minted}
+is mapped to the following facts for the solver:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+condition(153)
+condition_requirement(153, "node", "h5utils")
+condition_requirement(
+  153, "variant_value", "h5utils", "png", "True"
+)
+imposed_constraint(
+  153, "version_satisfies", "libpng", "1.6.0:"
+)
+dependency_condition(153, "h5utils", "libpng")
+\end{minted}
+It's straightforward to see that:
+\begin{itemize}
+\item Each directive is associated with a unique global ID.
+\item Constraints are either ``requirement'' or ``imposed''. 
+\item Different type of conditions have different semantics\footnotemark
+\end{itemize}
+\footnotetext{For instance, the \texttt{dependency\_condition} fact is present only for \texttt{depends\_on} directives and activates logic that is specific to dependencies.}
+The code to trigger and impose general conditions in the logic program is surprisingly simple to read. ASP conditional rules allow us to effectively build new rules from input facts:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+condition_holds(ID) :-
+condition(ID);
+attr(N, A1): condition_requirement(ID, N, A1);
+attr(N, A1, A2): condition_requirement(ID, N, A1, A2);
+...
+\end{minted}
+based on their \emph{arity}. Other rules, similar to:
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+attr(N, A1) :- 
+  condition_holds(ID), imposed_constraint(ID, N, A1).
+\end{minted}
+enforce the imposed constraints when a condition holds.
 
 \subsection{Example: Specialize LAPACK Providers}
 \subsection{Example: CUDA/RoCM Conditional Variants}
