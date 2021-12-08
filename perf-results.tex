@@ -1,0 +1,40 @@
+The \clingo{} solver performance given a logic program depends
+on a number of factors. First, the number of facts in a specific concretization. Second,
+the configuration and various optimization parameters passed to the solver. 
+
+The solving process consists of four stages: \emph{setup}, \emph{load}, 
+\emph{ground}, and \emph{solve}. The first two are preliminary phases and the other two 
+perform the actual solve. Specifically, the setup phase generates the facts for the given
+spec, whereas the load phase loads the main logic program (i.e., the rules of the software 
+model) as a resource into the solver. The grounding phase is the first part of the actual
+solve, it turns the facts and first-order logic rules into propositional logic. Once we
+have a grounded program, we can run the last phase, which is the full solve in \clingo{}.
+
+We instrumented the solving code such that we obtained time measurements for each one
+of the phases and the total time for the whole process.
+
+
+\subsection{Solve timings for all packages}
+
+\input{figures/cumulative_quartz_fig.tex}
+
+\input{figures/cumulative_lassen_fig.tex}
+
+\input{figures/deps_quartz_fig.tex}
+
+\input{figures/deps_lassen_fig.tex}
+
+\input{figures/e4s_cache_quartz_fig.tex}
+
+\input{figures/e4s_cache_lassen_fig.tex}
+
+- Time vs. number of dependnecies
+- other properties?
+- --single-shot vs. no single-shot?
+- different tactics?
+
+\subsection{Solve timings for all packages with reuse}
+- scaling repo size
+
+
+How is the ASP based solver performing?
