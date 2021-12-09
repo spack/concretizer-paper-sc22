@@ -57,7 +57,7 @@ In response to those weaknesses of the naive approach, we devised a more lightwe
 We added a function to our clingo program with the signature \texttt{error/1.}.
 Every integrity constraint in the concretizer program contains a term that is \texttt{error(msg)}, where ``msg'' is a string describing the purpose of the integrity constraint.
 The error terms are the only facts in the program which are given as constraints to clingo.
-This leads to unsatisfiable cores small enough to be minimized in a reasonable time \emdash there are 16 assumptions in the program, which is the worst-case for the iterative solves necessary for core minimization.
+This leads to unsatisfiable cores small enough to be minimized in a reasonable time \textemdash there are 16 assumptions in the program, which is the worst-case for the iterative solves necessary for core minimization.
 In practice, this can be done in a small fraction of the original solve time.
 Satisfiable solves for the ``hwloc'' package take on the order of ten seconds, and core minimization adds around another second.
 Performance numbers will be discussed in more detail in the ``Performance Results'' section.
