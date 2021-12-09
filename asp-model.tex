@@ -101,6 +101,7 @@ node_target_weight(P, W) :-
 \end{minted}
 
 \subsection{Generalized Condition Handling}
+\label{subsec:generalizedcond}
 A peculiar feature of \spack, as a package manager, is that it doesn't only optimize for versions but for many other aspects of the build as well e.g. which compiler to use, which microarchitecture to target, etc. 
 The DSL used for package recipes reflects this complexity by having multiple directives to declare different properties or constraints for each software, as seen in Section~REFMISSING. 
 
@@ -113,7 +114,7 @@ means that, if the spec has the \texttt{mpi} variant turned on, then it depends 
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 provides('lapack', when='@12.0:')
 \end{minted}
-means that a package provides the \texttt{LAPACK} API starting at version $12.0$.
+means that a package provides the \texttt{LAPACK} API if its version is $12.0$ or greater.
 This property allowed to encode all the directives as \emph{generalized conditions}, where most of the sematics is encoded abstractly in a few lines of the logic program.
 
 Getting back to a simple example, the snippet below:
@@ -121,19 +122,15 @@ Getting back to a simple example, the snippet below:
 class H5utils(AutotoolsPackage):
     depends_on('png@1.6.0:', when='+png')
 \end{minted}
-is mapped to the following facts for the solver:
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
-condition(153)
-condition_requirement(153, "node", "h5utils")
-condition_requirement(
-  153, "variant_value", "h5utils", "png", "True"
-)
-imposed_constraint(
-  153, "version_satisfies", "libpng", "1.6.0:"
-)
-dependency_condition(153, "h5utils", "libpng")
+is translated to the following facts:
+\begin{minted}[fontsize=\scriptsize, bgcolor=bg]{text}
+condition(153).
+condition_requirement(153, "node", "h5utils").
+condition_requirement(153, "variant_value", "h5utils", "png", "true").
+imposed_constraint(153, "version_satisfies", "libpng", "1.6.0:").
+dependency_condition(153, "h5utils", "libpng").
 \end{minted}
-It's straightforward to see that:
+when setting up the problem to be solved by \clingo. The important points to note are that:
 \begin{itemize}
 \item Each directive is associated with a unique global ID.
 \item Constraints are either ``requirement'' or ``imposed''. 
@@ -155,5 +152,51 @@ attr(N, A1) :-
 \end{minted}
 enforce the imposed constraints when a condition holds.
 
-\subsection{Example: Specialize LAPACK Providers}
-\subsection{Example: CUDA/RoCM Conditional Variants}
+\subsection{Usability Improvements due to \clingo}
+Before the adoption of \clingo, concretization in \spack{} was performed relying on a greedy algorithm with limited backtracking capabilities. This algorithm ensured only that solutions found are valid and conforming to user's request, but it might have failed to find one of those valid solutions if backtracking was necessary to reach that result. Said otherwise, the old algorithm was subject to outputing many \emph{false negatives} \textemdash{} cases where \spack{} would error even though a valid solution exists.
+
+A workaround for this limitation consisted in overconstraining problematic specs, so to make backtracking unnecessary. The drawback was an increased need for boilerplate code, which became particularly evident in large production environments and complex scientific software. With the adoption of \clingo{} overspecification is not needed anymore and \emph{false negatives} have been effectively eliminated from concretization.
+
+\subsubsection{Conditional Dependencies}
+A prominent example of this behavior is with packages having dependencies conditional to a variant being set to a non-default value. Let's take for instance \texttt{hpctoolkit}, which has the following directives:
+\begin{minted}[fontsize=\small, bgcolor=bg]{python}
+class Hpctoolkit(AutotoolsPackage):
+    variant('mpi', default=False, description='...')
+    depends_on('mpi', when='+mpi')
+\end{minted}
+Trying to use the old algorithm to concretize \texttt{hpctoolkit \^{}mpich} fails like shown next:
+\begin{minted}[fontsize=\footnotesize, bgcolor=bg]{console}
+% spack spec hpctoolkit ^mpich
+Input spec
+--------------------------------
+hpctoolkit
+    ^mpich
+
+Concretized
+--------------------------------
+==> Error: Package hpctoolkit does not depend on mpich
+\end{minted}
+since the greedy algorithm would set variant values before descending to dependencies. Since no value is specified for the \texttt{mpi} variant, the value chosen is \texttt{false} (the variant default) which leads to \texttt{hpctoolkit} having no dependency on \texttt{mpi}. The workaround required users to write the redundant spec \texttt{hpctoolkit+mpi \^{}mpich} to be able to concretize succesfully. With \clingo{} the overspecification is not needed anymore and the value of the \texttt{mpi} variant is correctly deduced from the user's request to have \texttt{mpich} in the graph, as shown
+in Figure~\ref{fig:hpctoolkit}.
+
+% FIXME: Figure is too small, what should we do about that? Remove it? Show only part?
+\begin{figure}[h]
+\includegraphics[width=\columnwidth]{figures/hpctoolkit_concretized.png}
+\caption{\texttt{hpctoolkit \^{}mpich} as concretized on an Ubuntu 20.04 OS using system compilers}
+\label{fig:hpctoolkit}
+\end{figure}
+
+\subsubsection{Conflicts in Packages}
+Before using \clingo{} conflicts in packages were only used to \emph{validate} a solution computed by the greedy-algorithm. If the solution matched any conflict, \spack{} would have errored and hinted the user on how to overconstrain the initial spec to help concretization. With clingo instead conflicts are fully taken into account during the solve\footnotemark and \spack{} can succesfully find solutions without asking the user to be more specific.
+\footnotetext{With \clingo conflicts are treated as shown in Section~\ref{subsec:generalizedcond} and, by imposing \emph{integrity constraints} on the problem, they effectively prevent portions of the search space from being explored}
+
+\subsubsection{Specialization on Providers of Virtual Packages}
+Using \clingo{} also enabled more complex use cases e.g. imposing constraints on specific virtual package providers. A simple example of that is given by the \texttt{berkeleygw} package, which has the following directives:
+\begin{minted}[fontsize=\small, bgcolor=bg]{python}
+class Berkeleygw(MakefilePackage):
+    variant('openmp', default=True)
+    depends_on('lapack')
+    depends_on('openblas threads=openmp', 
+               when='+openmp ^openblas')
+\end{minted}
+The last directive forces \texttt{openblas} to have \texttt{openmp} support if \texttt{berkeleygw} has \texttt{openmp} support and \texttt{openblas} has been chosen as a provider for the mandatory \texttt{lapack} virtual dependency. Conditional constraints of that complexity could not be expressed before, due to the limitations of the previous greedy algorithm.
