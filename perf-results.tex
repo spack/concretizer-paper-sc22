@@ -1,3 +1,5 @@
+% How is the ASP based solver performing?
+
 The \clingo{} solver performance given a logic program depends
 on a number of factors. First, the number of facts in a specific concretization. Second,
 the configuration and various optimization parameters passed to the solver. 
@@ -16,17 +18,20 @@ of the phases and the total time for the whole process.
 
 \subsection{Solve timings for all packages}
 
-\input{figures/cumulative_quartz_fig.tex}
-
-\input{figures/cumulative_lassen_fig.tex}
+In this section we examine the solving times for all the packages. First, we focus on
+the relation between the solving times and the nunmber of dependencies for each package.
 
 \input{figures/deps_quartz_fig.tex}
 
 \input{figures/deps_lassen_fig.tex}
 
-\input{figures/e4s_cache_quartz_fig.tex}
+Figures~\ref{fig:deps_quartz} and~\ref{fig:deps_lassen} show the grounding, solve, and full solving (i.e., involving all the stages) times for all the packages on Quartz and Lassen, respectively. Load times, as one would expect, were not affected by the number of packages. Also, the setup times are the same order of magnitude as ground times and do not depend on \clingo{}'s performance so they were ommitted in favor of showing times that are directly dependent on \clingo{}. We used the \clingo{}'s "tweety" configuration and "usc,one" optimization strategy for running the solving process. Further below we explore the differences in solving times between these different strategies.
 
-\input{figures/e4s_cache_lassen_fig.tex}
+We can see from the figures that the time increases as the number of dependent packages increases. This is because increased number of dependencies leads to a larger number of facts and a bigger logic program overall. 
+
+\input{figures/cumulative_quartz_fig.tex}
+
+\input{figures/cumulative_lassen_fig.tex}
 
 - Time vs. number of dependnecies
 - other properties?
@@ -36,5 +41,8 @@ of the phases and the total time for the whole process.
 \subsection{Solve timings for all packages with reuse}
 - scaling repo size
 
+\input{figures/e4s_cache_quartz_fig.tex}
 
-How is the ASP based solver performing?
+\input{figures/e4s_cache_lassen_fig.tex}
+
+
