@@ -19,7 +19,7 @@ of the phases and the total time for the whole process.
 \subsection{Solve timings for all packages}
 
 In this section we examine the solving times for all the packages. First, we focus on
-the relation between the solving times and the nunmber of dependencies for each package.
+the relation between the solving times and the number of dependencies for each package.
 
 \input{figures/deps_quartz_fig.tex}
 
@@ -27,13 +27,18 @@ the relation between the solving times and the nunmber of dependencies for each 
 
 Figures~\ref{fig:deps_quartz} and~\ref{fig:deps_lassen} show the grounding, solve, and full solving (i.e., involving all the stages) times for all the packages on Quartz and Lassen, respectively. Load times, as one would expect, were not affected by the number of packages. Also, the setup times are the same order of magnitude as ground times and do not depend on \clingo{}'s performance so they were ommitted in favor of showing times that are directly dependent on \clingo{}. We used the \clingo{}'s "tweety" configuration and "usc,one" optimization strategy for running the solving process. Further below we explore the differences in solving times between these different strategies.
 
-We can see from the figures that the time increases as the number of dependent packages increases. This is because increased number of dependencies leads to a larger number of facts and a bigger logic program overall. 
+We can see from the figures that the time increases as the number of dependent packages increases. This is because increased number of dependencies leads to a larger number of facts and a bigger logic program overall.
+
+Figures~\ref{fig:deps_quartz} and~\ref{fig:deps_lassen} also show that there are two major clusters in the execution times. The clusters are separated by a gap in the dependencies. One cluster contains packages with less than 200 dependencies, whereas, the other major cluster contains packages with more than 400 dependencies. The gap occurs because of dependency on \emph{cmake}, which itself depends cumulatively on more than 400 packages.
+
+Besides dependencies another set of factors that influences the execution times are \clingo{} parameters. Specifically, \clingo{} defines six configuration presets: \emph{frumpy}, \emph{jumpy}, \emph{tweety}, \emph{trendy}, \emph{crafty}, and \emph{handy}. Each preset sets numerous low level parameters that control different aspects of the solver. In our performance study, we specifically focus on three configurations: \emph{tweety} -- geared towards typical ASP programs, \emph{trendy} -- geared towards industrial problems, and \emph{handy} -- geared towards large problems.
 
 \input{figures/cumulative_quartz_fig.tex}
 
 \input{figures/cumulative_lassen_fig.tex}
 
-- Time vs. number of dependnecies
+Figures~\ref{fig:cdf_quartz} and~\ref{fig:cdf_lassen} show the cumulative distribution of the solve times under \emph{tweety}, \emph{trendy}, and \emph{handy} configurations on Quartz and Lassen machines, respectively. The vast majority of packages are fully solved in under 25 seconds on both machines. We can also see that there is no difference in ground times between the different configurations. This suggests that most low level parameters that are tweaked by each configuration control the actual solving phase. The figures cleary indicate that \emph{tweety} perform better than the other configurations we benchmarked. This is, therefore, the default configuraion used in the concretization process. 
+
 - other properties?
 - --single-shot vs. no single-shot?
 - different tactics?
