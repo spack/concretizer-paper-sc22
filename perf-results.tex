@@ -29,7 +29,9 @@ Figures~\ref{fig:deps_quartz} and~\ref{fig:deps_lassen} show the grounding, solv
 
 We can see from the figures that the time increases as the number of dependent packages increases. This is because increased number of dependencies leads to a larger number of facts and a bigger logic program overall.
 
-Figures~\ref{fig:deps_quartz} and~\ref{fig:deps_lassen} also show that there are two major clusters in the execution times. The clusters are separated by a gap in the dependencies. One cluster contains packages with less than 200 dependencies, whereas, the other major cluster contains packages with more than 400 dependencies. The gap occurs because of dependency on \emph{cmake}, which itself depends cumulatively on more than 400 packages.
+Figures~\ref{fig:deps_quartz} and~\ref{fig:deps_lassen} also show that there are two major clusters in the execution times. The clusters are separated by a gap in the dependencies. One cluster contains packages with less than 200 dependencies, whereas, the other major cluster contains packages with more than 400 dependencies. 
+
+% The gap occurs because of dependency on \emph{cmake}, which itself depends cumulatively on more than 400 packages.
 
 Besides dependencies another set of factors that influences the execution times are \clingo{} parameters. Specifically, \clingo{} defines six configuration presets: \emph{frumpy}, \emph{jumpy}, \emph{tweety}, \emph{trendy}, \emph{crafty}, and \emph{handy}. Each preset sets numerous low level parameters that control different aspects of the solver. In our performance study, we specifically focus on three configurations: \emph{tweety} -- geared towards typical ASP programs, \emph{trendy} -- geared towards industrial problems, and \emph{handy} -- geared towards large problems.
 
