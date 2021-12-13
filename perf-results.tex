@@ -15,7 +15,6 @@ have a grounded program, we can run the last phase, which is the full solve in \
 We instrumented the solving code such that we obtained time measurements for each one
 of the phases and the total time for the whole process.
 
-
 \subsection{Solve timings for all packages}
 
 In this section we examine the solving times for all the packages. First, we focus on
@@ -39,17 +38,21 @@ Besides dependencies another set of factors that influences the execution times 
 
 \input{figures/cumulative_lassen_fig.tex}
 
-Figures~\ref{fig:cdf_quartz} and~\ref{fig:cdf_lassen} show the cumulative distribution of the solve times under \emph{tweety}, \emph{trendy}, and \emph{handy} configurations on Quartz and Lassen machines, respectively. The vast majority of packages are fully solved in under 25 seconds on both machines. We can also see that there is no difference in ground times between the different configurations. This suggests that most low level parameters that are tweaked by each configuration control the actual solving phase. The figures cleary indicate that \emph{tweety} perform better than the other configurations we benchmarked. This is, therefore, the default configuraion used in the concretization process. 
+Figures~\ref{fig:cdf_quartz} and~\ref{fig:cdf_lassen} show the cumulative distribution of the solve times under \emph{tweety}, \emph{trendy}, and \emph{handy} configurations on Quartz and Lassen machines, respectively. The vast majority of packages are fully solved in under 25 seconds on both machines. We can also see that there is no difference in ground times between the different configurations. This suggests that most low level parameters that are tweaked by each configuration control the actual solving phase. The figures cleary indicate that \emph{tweety} performs better than the other configurations we benchmarked. This is, therefore, the default configuration used in the concretization process. 
 
-- other properties?
-- --single-shot vs. no single-shot?
-- different tactics?
+% - other properties?
+% - --single-shot vs. no single-shot?
+% - different tactics?
 
 \subsection{Solve timings for all packages with reuse}
-- scaling repo size
+
+In this subsection, we examine the performance of the solver with the \emph{reuse} flag switched on. As described in Section~\ref{sec:reuse}, reusing packages in a buildcache increases the number of facts proportionally to the number of cached packages.
+
+We specifically focus on the packages in the ECP Extreme-scale Scientific Software Stack (E4S) project (CITE). It is a community effort to provide open source software packages for developing, deploying, and running scientific applications on HPC platforms. There are just under 600 packages in E4S, but the buildcache of the project targets different architectures, operating systems, and compilers, thereby totaling over 60K pre-compiled packages (hash signatures). We divided the buildcache into 4 groups: full buildcache (63099 packages), buildcache restricted to the ppc64le architecture (27160 packages), buildcache restricted to the rhel7 OS (15255 packages), and buildcache restricted to both ppc64le architecture and the rhel7 OS (6804 packages). Benchmarking across an increasing size of the buildcache provides us with a better understanding of the impact of the package resuse functionality.
 
 \input{figures/e4s_cache_quartz_fig.tex}
 
 \input{figures/e4s_cache_lassen_fig.tex}
 
+Figures~\ref{fig:cdf_e4s_quartz} and~\ref{fig:cdf_e4s_lassen} show the cumulative distribution of the solve times of the E4S packages with increasing buildcache on Quartz and Lassen, respectively. We first observe that the setup times are generally higher than the actual solve times, even for smaller buildcaches. This happens because when we reuse packages we need to encode much more facts than usual, which are facts representing the dependencies. The figures also show that there is a significant jump in the solve times for the biggest buildcache.
 
