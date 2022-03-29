@@ -1,4 +1,4 @@
-name=concretizer-paper-osdi22
+name=concretizer-paper-sc22
 
 all: clean
 	latexmk $(name).tex

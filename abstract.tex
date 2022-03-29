@@ -1,4 +1,5 @@
 \begin{abstract}
-Your abstract text goes here. Just a few facts. Whet our appetites.
-Not more than 200 words, if possible, and preferably closer to 150.
+Package managers are now commonplace in HPC, and at the core of them are are sophisticated dependency solvers, which select compatible versions of dependencies to satisfy a user's installation request. The configuration space of software versions is combinatorial, but HPC software is even more complex. Build-time parameters, compiler and language runtimes, GPU options, and compiler flags all affect performance, and modeling the compatibility semantics among packages to choose a ``good'' configuration for users is a daunting problem.
+
+We introduce a new solver framework that can handle HPC software complexity, using Answer Set Programming (ASP) to model compatibility semantics. We show that our framework can be used to model complex GPU software stacks and also mix builds and optimized binaries seamlessly for repositories of tens of thousands of package builds.
 \end{abstract}

@@ -1,3 +1,8 @@
+%-------------------------------------------------------------------------------
+\section{Reusing Already Built Packages}
+%-------------------------------------------------------------------------------
+\label{sec:reuse}
+
 While \spack{} is primarily a package manager installing software \emph{from sources}, the possibility to reuse  already built software more aggressively has been a critical request from the community since a few years (REFSURVEY).
 
 Many packaging systems, including \spack{} itself before the adoption of \clingo, reuse builds via metadata hashes. This mechanism relies on the fact that, when an installation graph is concretized, each node in the DAG can be given a unique hash that identifies it, as shown in (FIGURE SLIDE 19). A user can then query for an exact hash match to reuse something that is either already installed or available in binary format in a buildcache. 

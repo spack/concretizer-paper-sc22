@@ -1,0 +1,92 @@
+\documentclass[10pt,final,conference,letterpaper]{IEEEtran}
+% \IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+
+% To be able to draw some self-contained figs
+\usepackage{tikz}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{subfig}
+\usepackage{url}
+
+% Use for decent code formatting
+\usepackage{inconsolata}
+\usepackage[outputdir=build]{minted}
+
+
+% notes for different people
+\newcommand{\tg}[1]{\ifisdraft{\color{blue}[#1 -- Todd]}\fi}
+\newcommand{\spack}{\texttt{Spack}}
+\newcommand{\clingo}{\texttt{clingo}}
+\newcommand{\perfsubfigwidth}{0.31}
+% \def{\perfsubfigwidth}{0.31}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+    
+\begin{document}
+
+\title{Dependency Solving for Modern Software}
+
+% \author{%
+% \IEEEauthorblockN{Todd Gamblin}
+% \IEEEauthorblockA{%\textit{dept. name of organization (of Aff.)}\\
+% \textit{Lawrence Livermore National Laboratory}\\
+% Livermore, CA, US\\
+% tgamblin@llnl.gov}
+% \and
+% \IEEEauthorblockN{Massimiliano Culpo}
+% \IEEEauthorblockA{%\textit{dept. name of organization (of Aff.)}\\
+% \textit{np-complete, S.r.l.}\\
+% City, Italy\\
+% massimiliano.culpo@googlemail.com}
+% \and
+% \IEEEauthorblockN{Gregory Becker}
+% \IEEEauthorblockA{%\textit{dept. name of organization (of Aff.)} \\
+% \textit{Lawrence Livermore National Laboratory}\\
+% Livermore, CA, US\\
+% becker33@llnl.gov}
+% \and
+% \IEEEauthorblockN{Sergei Shudler}
+% \IEEEauthorblockA{%\textit{dept. name of organization (of Aff.)} \\
+% \textit{Lawrence Livermore National Laboratory}\\
+% Livermore, CA, US\\
+% shudler1@llnl.gov}
+% } 
+
+\author{\IEEEauthorblockN{%
+Todd Gamblin\IEEEauthorrefmark{1}, %
+Massimiliano Culpo\IEEEauthorrefmark{2}, %
+Gregory Becker\IEEEauthorrefmark{1}, %
+Sergei Shudler\IEEEauthorrefmark{1}}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}Lawrence Livermore National Laboratory, Livermore, CA, USA\\
+Email: \{tgamblin, becker33, shudler1\}@llnl.gov}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}np-complete, S.r.l., Italy\\
+Email: massimiliano.culpo@googlemail.com}}
+
+
+\maketitle
+
+\input{abstract}
+
+\begin{IEEEkeywords}
+Package managers, ASP
+\end{IEEEkeywords}
+
+\input{intro}
+\input{package-managers}
+\input{spack}
+\input{asp}
+\input{asp-model}
+\input{reuse}
+\input{errors}
+\input{perf-results}
+\input{conclusions}
+\input{acks}
+
+% For testing only - to be removed once citations are added in the content
+\nocite{*}
+%%%
+
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv,concretizer-paper-sc22}
+
+
+\end{document}

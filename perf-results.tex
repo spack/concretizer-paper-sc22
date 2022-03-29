@@ -1,24 +1,19 @@
+%-------------------------------------------------------------------------------
+\section{Performance Results}
+%-------------------------------------------------------------------------------
+\label{sec:perf-results}
+
 % How is the ASP based solver performing?
 
-The \clingo{} solver performance given a logic program depends
-on a number of factors. First, the number of facts in a specific concretization. Second,
-the configuration and various optimization parameters passed to the solver. 
+The \clingo{} solver performance given a logic program depends on a number of factors. First, the number of facts in a specific concretization. Second, the configuration and various optimization parameters passed to the solver. 
 
-The solving process consists of four stages: \emph{setup}, \emph{load}, 
-\emph{ground}, and \emph{solve}. The first two are preliminary phases and the other two 
-perform the actual solve. Specifically, the setup phase generates the facts for the given
-spec, whereas the load phase loads the main logic program (i.e., the rules of the software 
-model) as a resource into the solver. The grounding phase is the first part of the actual
-solve, it turns the facts and first-order logic rules into propositional logic. Once we
-have a grounded program, we can run the last phase, which is the full solve in \clingo{}.
+The solving process consists of four stages: \emph{setup}, \emph{load}, \emph{ground}, and \emph{solve}. The first two are preliminary phases and the other two perform the actual solve. Specifically, the setup phase generates the facts for the given spec, whereas the load phase loads the main logic program (i.e., the rules of the software model) as a resource into the solver. The grounding phase is the first part of the actual solve, it turns the facts and first-order logic rules into propositional logic. Once we have a grounded program, we can run the last phase, which is the full solve in \clingo{}.
 
-We instrumented the solving code such that we obtained time measurements for each one
-of the phases and the total time for the whole process.
+We instrumented the solving code such that we obtained time measurements for each one of the phases and the total time for the whole process.
 
 \subsection{Solve timings for all packages}
 
-In this section we examine the solving times for all the packages. First, we focus on
-the relation between the solving times and the number of dependencies for each package.
+In this section we examine the solving times for all the packages. First, we focus on the relation between the solving times and the number of dependencies for each package.
 
 \input{figures/deps_quartz_fig.tex}
 

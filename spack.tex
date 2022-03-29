@@ -1,3 +1,8 @@
+%-------------------------------------------------------------------------------
+\section{Spack}
+%-------------------------------------------------------------------------------
+\label{sec:software-model}
+
 \spack is a package manager designed to support High Performance Computing (HPC) use-cases.
 \spack allows multiple installations of a single package to coexist on the system to support scientific research and the requirements of scientific software
 This greatly expands the space of possible build configurations necessary to support, and is the major driver behind other design decisions in \spack.
@@ -18,8 +23,9 @@ The spec syntax in \spack allows users to specify points or spaces within this c
 For example, often a users may only care to build a particular package, with no additional constraints.
 This portion of the build space is all possible builds of that package, but not other packages.
 It can be represented in the spec syntax by the package name.
-\mint{console}|hdf5  # specifies the space of any build of the package hdf5|
-
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+hdf5  # specifies the space of any build of hdf5
+\end{minted}
 Particular sigils are used to specify other attributes of the package that the user may care about. This allows the user to control the version, compiler, compiler version, architecture, and build options for the package.
 \begin{tabular}{cll}
 \hline
@@ -37,10 +43,9 @@ Sigil & Examples & Meaning \\
 
 The spec syntax is telescoping and fully recursive.
 Recursion is what allows full control over the build space -- any attribute that can be set on the root can be set on any dependency. For example, the spec below constrains the build to any possible build of the package \texttt{hdf5} at version 1.10.2 that depends on a build of the package \texttt{zlib} built with the \texttt{gcc} compiler and a build of the package \texttt{cmake} built to target the \texttt{aarch64} architecture.
-
-\begin{verbatim}
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
 hdf5@1.10.2 ^zlib%gcc ^cmake target=aarch64
-\end{verbatim}
+\end{minted}
 
 While in theory it is possible to completely constrain a build via the spec syntax, we find that in practice users care about a very small set of constraints, and rely on the concretizer to fill in defaults for the rest of the build. We refer to a portion of the build space in \spack as a ``spec'', and a single point as a ``concrete spec''. A spec is represented internally as a directed acyclic graph (DAG) where edges are dependency relationships and nodes are packages.
 
@@ -62,25 +67,29 @@ The package may depend on any spec for the dependency using the spec syntax disc
 
 Consider this example package:
 
-\begin{verbatim}
-from pkgkit import *  # import the DSL
-
-class Foo(Package):  # this is the classname for the package `foo`
+\begin{minted}[fontsize=\footnotesize, bgcolor=bg]{python}
+# This is the classname for the package `foo`
+class Foo(Package):
 
     version("1.1.0")
     version("1.0.0")
 
-    variant("bar", default=True, description="Build foo with bar support")
+    variant("bar", default=True,
+            description="Build foo with bar support")
 
-    depends_on("bar@2.0:", when="+bar")  # depends on bar 2.0 or later for bar support
-    depends_on("baz")  # depends on baz
-    depends_on("baz+corge", when="@1.1.0:")  # newer versions require baz with corge support
+    # Depends on bar 2.0 or later for bar support
+    depends_on("bar@2.0:", when="+bar")
+    depends_on("baz")  # Depends on baz
+    # Newer versions require baz with corge support
+    depends_on("baz+corge", when="@1.1.0:")
 
-    conflicts("%intel")  # known failure when building with intel compilers
-    conflicts("target=aarch64:)  # does not support architectures derived from ARM64
+    # Known failure when building with intel compilers
+    conflicts("%intel")
+    # Does not support architectures derived from ARM64
+    conflicts("target=aarch64:")
 
     def install(self, spec, prefix):
-        # translate spec into arguments to build system
+        # Translate spec into arguments to build system
         config_args = [
             'baz=%s' % spec['baz'].prefix
         ]
@@ -90,11 +99,12 @@ class Foo(Package):  # this is the classname for the package `foo`
         else:
             config_args.append('bar=none')
 
-        # run the build system -- configure and make methods automatically generated
+        # Run the build system -- 
+        # configure and make methods automatically generated
         configure(*config_args)
         make()
         make('install')
-\end{verbatim}
+\end{minted}
 
 This is a simple package.
 It has two versions, 1.0.0 and 1.1.0.
@@ -136,10 +146,10 @@ Our package file for \texttt{foo} specifies the default value for the variant \t
 This creates a feedback loop with the list of nodes, increasing the complexity of the algorithm.
 The concrete spec generated would be
 
-\begin{verbatim}
+\begin{minted}[fontsize=\small, bgcolor=bg]{text}
 foo@1.0.0+bar%gcc@11.2.0 arch=linux-centos8-skylake
   ^ bar@2.0.0 ...
   ^ baz@3.1.1 ...
-\end{verbatim}
+\end{minted}
 
 where the elided values are the details of the dependency packages we did not consider for this exercise.
