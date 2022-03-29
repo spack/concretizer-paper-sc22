@@ -108,7 +108,7 @@ node_target_weight(P, W) :-
 \subsection{Generalized Condition Handling}
 \label{subsec:generalizedcond}
 A peculiar feature of \spack, as a package manager, is that it doesn't only optimize for versions but for many other aspects of the build as well e.g. which compiler to use, which microarchitecture to target, etc. 
-The DSL used for package recipes reflects this complexity by having multiple directives to declare different properties or constraints for each software, as seen in Section~REFMISSING. 
+The DSL used for package recipes reflects this complexity by having multiple directives to declare different properties or constraints for each software, as seen in Section~\ref{sec:software-model}. 
 
 One interesting abstraction, that we observed while coding the ASP logic program, is that each of these directives can be seen as a way to impose additional constraints on the solution, conditional on other constraints 
 being met. For instance, the following directive in a package:
