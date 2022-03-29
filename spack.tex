@@ -16,20 +16,9 @@ The spec syntax in \spack{} allows users to specify points or spaces within this
 \begin{minted}[fontsize=\small, bgcolor=bg]{text}
 hdf5  # specifies the space of any build of hdf5
 \end{minted}
-Particular sigils are used to specify other attributes of the package that the user may care about. This allows the user to control the version, compiler, compiler version, architecture, and build options for the package.
-\begin{tabular}{cll}
-\hline
-Sigil & Examples & Meaning \\
-\hline
-\texttt{\%} & \texttt{hdf5\%gcc} & Constrain the build space to use a particular compiler. \\
-\hline
-\texttt{@} & \shortstack{\texttt{hdf5@1.10.2} \\ \texttt{hdf5\%gcc@10.3.1}} & \shortstack{Constrain the build space to a particular version or set of versions \\ Constrain the build space to a particular compiler version or set of compiler versions} \\
-\hline
-\shortstack{\texttt{+} \\ \texttt{~} \\ \texttt{-}} & \shortstack{\texttt{hdf5+mpi} \\ \texttt{hdf5~mpi} \\ \texttt{hdf5 -mpi}} & Constrain the build space to require (\texttt{+}) or forbid (\texttt{~, -}) a boolean build option. \\
-\hline
-\texttt{key=value} & \shortstack{\texttt{hdf5 mpi=true} \\ \texttt{hdf5 api=default} \\ \texttt{hdf5 target=skylake}} & Constrain the build space to require a particular build option value or architecture value. \\
-\end{tabular}
+Particular sigils (presented in Table~\ref{tab:sigil}) are used to specify other attributes of the package that the user may care about. This allows the user to control the version, compiler, compiler version, architecture, and build options for the package.
 
+\input{sigil-tab}
 
 The spec syntax is telescoping and fully recursive. Recursion is what allows full control over the build space -- any attribute that can be set on the root can be set on any dependency. For example, the spec below constrains the build to any possible build of the package \texttt{hdf5} at version 1.10.2 that depends on a build of the package \texttt{zlib} built with the \texttt{gcc} compiler and a build of the package \texttt{cmake} built to target the \texttt{aarch64} architecture.
 \begin{minted}[fontsize=\small, bgcolor=bg]{text}
