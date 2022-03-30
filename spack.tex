@@ -3,7 +3,7 @@
 %-------------------------------------------------------------------------------
 \label{sec:software-model}
 
-\spack{} is a package manager designed to support High Performance Computing (HPC) use-cases.
+\spack{} is a package manager designed to support High Performance Computing (HPC) use-cases~\cite{gamblin+:sc15}.
 \spack{} allows multiple installations of a single package to coexist on the system to support scientific research and the requirements of scientific software This greatly expands the space of possible build configurations necessary to support, and is the major driver behind other design decisions in \spack{}.
 
 At a high level \spack{} can be broken down into three primary components: A ``spec syntax'' to represent individual builds from the combinatorial build space, a ``package DSL'' to specify build instructions for individual packages, and the ``concretizer'', the internal algorithm that takes abstract requests from the user as input and outputs concrete decisions about how to build a package or set of packages. While this paper is primarily focused ont he concretizer, we will discuss all three components in this section for background.

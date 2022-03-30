@@ -192,8 +192,8 @@ in Figure~\ref{fig:hpctoolkit}.
 \end{figure}
 
 \subsubsection{Conflicts in Packages}
-Before using \clingo{} conflicts in packages were only used to \emph{validate} a solution computed by the greedy-algorithm. If the solution matched any conflict, \spack{} would have errored and hinted the user on how to overconstrain the initial spec to help concretization. With clingo instead conflicts are fully taken into account during the solve\footnotemark and \spack{} can succesfully find solutions without asking the user to be more specific.
-\footnotetext{With \clingo conflicts are treated as shown in Section~\ref{subsec:generalizedcond} and, by imposing \emph{integrity constraints} on the problem, they effectively prevent portions of the search space from being explored}
+Before using \clingo{} conflicts in packages were only used to \emph{validate} a solution computed by the greedy-algorithm. If the solution matched any conflict, \spack{} would have errored and hinted the user on how to overconstrain the initial spec to help concretization. With clingo instead conflicts are fully taken into account during the solve\footnotemark{} and \spack{} can succesfully find solutions without asking the user to be more specific.
+\footnotetext{With \clingo{} conflicts are treated as shown in Section~\ref{subsec:generalizedcond} and, by imposing \emph{integrity constraints} on the problem, they effectively prevent portions of the search space from being explored}
 
 \subsubsection{Specialization on Providers of Virtual Packages}
 Using \clingo{} also enabled more complex use cases e.g. imposing constraints on specific virtual package providers. A simple example of that is given by the \texttt{berkeleygw} package, which has the following directives:
