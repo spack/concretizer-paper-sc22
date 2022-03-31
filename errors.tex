@@ -9,11 +9,11 @@ One common method for error messages in solvers are subset-minimal unsatisfiable
 Subset-minimal unsatisfiable cores are unsatisfiable subsets of solution for which removing any element from the overall problem results in a satisfiable problem.
 In a nearly trivial case, the clingo program
 
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+\begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 foo(x)
 foo(y)
 
-: foo(A), foo(B), A != B.
+:- foo(A), foo(B), A != B.
 \end{minted}
 
 will yield a subset-minimal unsatisfiable core of

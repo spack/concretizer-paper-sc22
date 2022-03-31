@@ -13,7 +13,7 @@ The issue with this way of proceeding is that users are \emph{effectively overco
 \subsection{Optimizing for Software Reuse}
 A more effective way to approach software reuse can be achieved by leveraging the ``Generalized Condition Handling'' logic shown in Section~\ref{subsec:generalizedcond}. 
 First, all the metadata from installed packages need to be encoded into facts:
-\begin{minted}[fontsize=\tiny, bgcolor=bg]{text}
+\begin{minted}[fontsize=\tiny, bgcolor=bg]{prolog}
 installed_hash("zlib","7fatdw6gth5nlfdj4d463rdhrby6qvx3").
 imposed_constraint("7fatdw6gth5nlfdj4d463rdhrby6qvx3","node","zlib").
 imposed_constraint("7fatdw6gth5nlfdj4d463rdhrby6qvx3","version","zlib","1.2.11").
@@ -24,16 +24,16 @@ imposed_constraint("7fatdw6gth5nlfdj4d463rdhrby6qvx3","node_target","zlib","icel
 \end{minted}
 The encoding is based on \texttt{imposed\_constraint} where the constraint ID is the hash associated with the installed package.
 To minimize the number of build from sources, the solver is allowed to choose a hash for any package:
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+\begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 { hash(P, Hash) : installed_hash(P, Hash) } 1
  :- node(P).
 \end{minted}
 If a hash is chosen, then all the constraints associated with it must be imposed:
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+\begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 impose(Hash) :- hash(P, Hash).
 \end{minted}
 Finally, the number of builds (i.e. of packages \emph{without} a hash) is minimized:
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+\begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 build(P) :- not hash(P, _), node(P).
 #minimize { 1@100,P : build(P) }.
 \end{minted}
