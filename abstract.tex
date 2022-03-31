@@ -1,5 +1,16 @@
 \begin{abstract}
-Package managers are now commonplace in HPC, and at the core of them are sophisticated dependency solvers, which select compatible versions of dependencies to satisfy a user's installation request. The configuration space of software versions is combinatorial, but HPC software is even more complex. Build-time parameters, compiler and language runtimes, GPU options, and compiler flags all affect performance, and modeling the compatibility semantics among packages to choose a ``good'' configuration for users is a daunting problem.
+  HPC and AI software has become extremely complex. Software packages make use of many
+  programming models and libraries to exploit a growing variety of available GPUs and
+  other accelerators. Package managers can mitigate this complexity, but integrating a
+  coherent software stack has never been harder. Simply finding compatible dependency
+  {\it versions} NP-complete, and with build-time options, multiple GPUs, flags, and
+  other parameters, the configuration space is enormous. Simply {\it modeling}
+  compatibility semantics to choose a ``good'' configuration is daunting.
 
-We introduce a new solver framework that can handle HPC software complexity, using Answer Set Programming (ASP) to model compatibility semantics. We show that our framework can be used to model complex GPU software stacks and also mix builds and optimized binaries seamlessly for repositories of tens of thousands of package builds.
+  We tackle this complexity using Answer Set Programming (ASP), a declarative model for
+  combinatorial search problems. We integrate an ASP solver into the popular {\it Spack}
+  package manager, and we show how it allows us to concisely model ever-growing
+  complexities of HPC software, while seamlessly mixing source builds with optimized
+  binaries. We show good performance on repositories with tens of thousands of package
+  builds.
 \end{abstract}
