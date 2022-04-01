@@ -27,14 +27,18 @@ ASP rules contain a head and a body, separated by \texttt{:-}.
 The \texttt{:-} can be read as ``if'' --- the head (left side) is true if the body (right side) is true.
 Terms in the body of a rule can also be preceded by the keyword ``not'' to imply the head based on their negation.
 Logical ``and'' is represented by a comma in the rule body, and logicl ``or'' is represented by repeating the head with a different rule body.
-Additionally, Capitalized words are variables.
+Variables are represented by capitalized words.
+Variables are scoped to the rule or fact in which they appear; the variable ``Package'' may be used in unrelated rules without any scoping issues.
+Additionally, variables appearing in the head of a rule must appear in a positive (non-negated) term in the rule body.
+This is referred to as ``safety'' in ASP, and is essential to ensuring the algorithm will terminate.
 Rules are instantiated with all possible substitutions for variables.
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
   optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Dependency) :- node(Package), depends_on(Package, Dependency).
+  node(Dependency) :- node(Package),
+                      depends_on(Package, Dependency).
 \end{minted}
 
 The rule here translates roughly to ``If a package is in the graph and it depends on another package, that package must be in the graph''.
@@ -44,13 +48,14 @@ Two particular types of rules are important to understand the power of ASP: \tex
 Answer Set Programming gets its name from the set of possible answers which satisfy the constraints of the program.
 ASP solvers focus on understanding the constraints on this space.
 Integrity constraints allow the programmer to rule out swatch of the answer set space by specifying conditions not to allow.
-In AnsProlog, these are represented by a headless rule.
+In ASP, these are represented by a headless rule.
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
   optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Dependency) :- node(Package), depends_on(Package, Dependency).
+  node(Dependency) :- node(Package),
+                      depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 \end{minted}
 
@@ -63,16 +68,18 @@ A choice rule is (optionally) constrained on either side to specify the minimum 
   optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Dependency) :- node(Package), depends_on(Package, Dependency).
+  node(Dependency) :- node(Package),
+                      depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 
   possible_version("hdf5", "1.13.1").
   possible_version("hdf5", "1.12.1").
-  1 { version(Package, Version) : possible_version(Package, Version) } 1 :- node(Package).
+  1 { version(P, V) : possible_version(P, V) } 1
+    :- node(P).
 \end{minted}
 
 The choice rule on the last line means ``If a package is in the graph, choose single version for it from among the possible versions for that package.''
-The ${a:b}$ syntax here has the same meaning as in formal set theory; it denotes the set of all $a$ such that $b$ is true.
+The $\{a:b\}$ syntax here has the same meaning as in formal set theory; it denotes the set of all $a$ such that $b$ is true.
 The addition of the numerals on either side instruct the solver to select an appropriate number of elements from that set, if the body condition holds.
 Choice rules allow the solver substantial freedom to create facts, within the specified constraints, that satisfy other constraint of the program or maximize optimization criteria.
 
@@ -84,17 +91,19 @@ There are often many valid solutions to a dependency resolution query, but only 
   optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Dependency) :- node(Package), depends_on(Package, Dependency).
+  node(Dependency) :- node(Package),
+                      depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 
   possible_version("hdf5", "1.13.1").
   possible_version("hdf5", "1.12.1").
-  1 { version(Package, Version) : possible_version(Package, Version) } 1 :- node(Package).
+  1 { version(P, V) : possible_version(P, V) } 1
+    :- node(P).
 
-  #minimize{ Weight@3,Package,Version : version_weight(Package, Version, Weight)}.
+  #minimize{ W@3,P,V : version_weight(P, V, W)}.
 \end{minted}
 
-This optimization constraint says ``I prefer (at priority 3) solutions that minimize the sum of the weights of the package versions, for all packages and versions.''
+This optimization constraint says ``I prefer (at priority 3) solutions that minimize the sum of the weights (W) of the package (P) versions (V), for all packages and versions.''
 A detailed discussion of the syntax for optimization is beyond the scope of this paper; for our purposes, it suffices to know that complex optimization across a variety of criteria at discrete priorities is possible in ASP.
 
 Our small and very incomplete program here already shows the power of ASP.
