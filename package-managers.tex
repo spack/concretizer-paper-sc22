@@ -31,7 +31,7 @@ However, these language package managers still typically solve only for package 
 
 Many language package managers do not use complete solvers.
 Solvers are complicated software that is difficult to use, and most programmers are not familiar with solvers and their capabilities.
-Additionally, most language maintainers prefer to write package managers and other community software in the languages they maintain --- since fast, effective solvers are typically written in well-established, compiled languages, modern and interpreted language communities see the solver as an unwanted external dependency for their package manager.
+Additionally, most language maintainers prefer to write package managers and other community software in the languages they maintain --- since fast, effective solvers are typically written in well-established, compiled languages, modern and interpreted language communities see the solver as an unwanted external dependency for their package manager~\cite{abate2020dependency}.
 
 More recently, some language package managers have determined that they need complete solvers for their communities. The Pip package manager for Python, for example, recently adopted a new algorithm to resolve dependencies using a solver~\cite{pip-new-resolver}, and the maintainers of the Dart package manager wrote a custom CDCL SAT solver called PubGrub~\cite{weizenbaum:pubgrub18}.
 Other package managers are moving in this direction as well; the Cargo~\cite{cargo} package manager for Rust is moving towards using PubGrub as well~\cite{pubgrub-rs} by reimplementing the algorithm in Rust.
