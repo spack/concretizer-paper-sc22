@@ -41,11 +41,15 @@ Figure~\ref{fig:deps_quartz} also shows that there are two major clusters in the
 
 \input{figures/cumulative_quartz_fig.tex}
 
+\input{figures/cdf_quartz_old_vs_clingo.tex}
+
 % \input{figures/cumulative_lassen_fig.tex}
 
 Besides dependencies another set of factors that influences the execution times are \clingo{} parameters. Specifically, \clingo{} defines six configuration presets: \emph{frumpy}, \emph{jumpy}, \emph{tweety}, \emph{trendy}, \emph{crafty}, and \emph{handy}. Each preset sets numerous low level parameters that control different aspects of the solver. In our performance study, we specifically focus on three configurations: \emph{tweety} -- geared towards typical ASP programs, \emph{trendy} -- geared towards industrial problems, and \emph{handy} -- geared towards large problems.
 
 Figure~\ref{fig:cdf_quartz} show the cumulative distribution of the solve times under \emph{tweety}, \emph{trendy}, and \emph{handy} configurations on Quartz. The results on Lassen are comparable to Quartz and are ommitted to save space. The vast majority of packages are fully solved in under 25 seconds on both machines. We can also see that there is no difference in ground times between the different configurations. This suggests that most low level parameters that are tweaked by each configuration control the actual solving phase. The figures cleary indicate that \emph{tweety} performs better than the other configurations we benchmarked. This is, therefore, the default configuration used in the concretization process.
+
+Figure~\ref{fig:cdf_quartz_old_vs_new} shows the the cumulative distribution of the old concretizer concretization times and \clingo{} total solve times (under \emph{tweety} configuration) on Quartz. For more than half of the packages the old concretizer completes the concretization faster. However, some packages take much longer time compared to \clingo{}.
 
 % - other properties?
 % - --single-shot vs. no single-shot?
