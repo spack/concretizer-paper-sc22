@@ -38,20 +38,20 @@ The package metadata requires more explanation. The package metadata defines the
 
 \begin{figure}
 \begin{minted}[fontsize=\footnotesize, bgcolor=bg]{python}
-# This is the classname for the package `foo`
-class Foo(Package):
+# This is the classname for the package `mypackage`
+class Mypackage(Package):
 
     version("1.1.0")
     version("1.0.0")
 
-    variant("bar", default=True,
-            description="Build foo with bar support")
+    variant("compression", default=True,
+            description="Build mypackage with zlib for compression support")
 
-    # Depends on bar 2.0 or later for bar support
-    depends_on("bar@2.0:", when="+bar")
-    depends_on("baz")  # Depends on baz
-    # Newer versions require baz with corge support
-    depends_on("baz+corge", when="@1.1.0:")
+    # Depends on zlib 1.2.0 or later for compression support
+    depends_on("zlib@1.2.0:", when="+compression")
+    depends_on("mpi")  # Depends on hdf5
+    # Newer versions require mpi interface version 3 or higher
+    depends_on("mpi@3:", when="@1.1.0:")
 
     # Known failure when building with intel compilers
     conflicts("%intel")
@@ -60,14 +60,12 @@ class Foo(Package):
 
     def install(self, spec, prefix):
         # Translate spec into arguments to build system
-        config_args = [
-            'baz=%s' % spec['baz'].prefix
-        ]
+        config_args = ['--with-mpi=%s' % spec['mpi'].prefix]
 
-        if 'bar' in spec:
-            config_args.append('bar=%s' % spec['baz'].prefix)
+        if 'zlib' in spec:
+            config_args.append('--with-zlib=%s' % spec['zlib'].prefix)
         else:
-            config_args.append('bar=none')
+            config_args.append('--without-zlib')
 
         # Run the build system --
         # configure and make methods automatically generated
