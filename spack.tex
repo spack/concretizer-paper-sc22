@@ -45,7 +45,7 @@ class Mypackage(Package):
     version("1.0.0")
 
     variant("compression", default=True,
-            description="Build mypackage with zlib for compression support")
+            description="Build with zlib compression support")
 
     # Depends on zlib 1.2.0 or later for compression support
     depends_on("zlib@1.2.0:", when="+compression")
@@ -63,9 +63,10 @@ class Mypackage(Package):
         config_args = ['--with-mpi=%s' % spec['mpi'].prefix]
 
         if 'zlib' in spec:
-            config_args.append('--with-zlib=%s' % spec['zlib'].prefix)
+            zlib_arg = '--with-zlib=%s' % spec['zlib'].prefix
         else:
-            config_args.append('--without-zlib')
+            zlib_arg = '--without-zlib'
+        config_args.append(zlib_arg)
 
         # Run the build system --
         # configure and make methods automatically generated
