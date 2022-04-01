@@ -99,7 +99,7 @@ A detailed discussion of the syntax for optimization is beyond the scope of this
 
 Our small and very incomplete program here already shows the power of ASP.
 In a SAT solver, the programmer would need to write out explicitly the rule for deriving dependency nodes from dependent nodes for every possible pair of packages.
-Even worse, our choice rule for selecting versions would need to be written out for every combination of package and version, and an enormous combination of logical operators constructed to ensure that for any group of versions \texttt{a_1, ..., a_n}, one of the constructions \texttt{a_i} and not any \texttt{a_j} for all $i\neqj$.
+Even worse, our choice rule for selecting versions would need to be written out for every combination of package and version, and an enormous combination of logical operators constructed to ensure that for any group of versions \texttt{$a_1, ..., a_n$}, one of the constructions \texttt{$a_i$} and not any \texttt{$a_j$} for all $i\neq{j}$.
 Writing out the facts of our small program in SAT is hard enough, and we haven't even discussed implementing optimization criteria in boolean logic.
 In ASP, though, it appears reasonably straightforward and is legible to future maintainers of our code.
 
