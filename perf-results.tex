@@ -11,9 +11,11 @@ The solving process consists of four stages: \emph{setup}, \emph{load}, \emph{gr
 
 We instrumented the solving code such that we obtained time measurements for each of the phases and the total time for the whole process.
 
-\input{figures/deps_quartz_fig.tex}
+% \input{figures/deps_quartz_fig.tex}
 
 % \input{figures/deps_lassen_fig.tex}
+
+\input{figures/perf_all_fig.tex}
 
 \subsection{System Setup}
 
@@ -30,26 +32,26 @@ the solver. This leads to natural clustering in the number of
 dependencies, as many simple dependencies lead to large numbers of
 potential dependencies that dwarf other differences between specs.
 
-Figure~\ref{fig:deps_quartz} shows the grounding, solve, and full solving (i.e., involving all the stages) times for all the packages on Quartz. The results on Lassen are comparable to Quartz and are ommitted to save space. Load times, as one would expect, were not affected by the number of packages. Also, the setup times are the same order of magnitude as ground times and do not depend on \clingo{}'s performance so they were ommitted in favor of showing times that are directly dependent on \clingo{}. We used the \clingo{}'s "tweety" configuration and "usc,one" optimization strategy for running the solving process. Further below we explore the differences in solving times between these different strategies.
+Figures~\ref{subfig:deps_quartz_load_a}, \ref{subfig:deps_quartz_solve_a}, and ~\ref{subfig:deps_quartz_full_a} show the grounding, solve, and full solving (i.e., involving all the stages) times for all the packages on Quartz. The results on Lassen are comparable to Quartz and are ommitted to save space. Load times, as one would expect, were not affected by the number of packages. Also, the setup times are the same order of magnitude as ground times and do not depend on \clingo{}'s performance so they were ommitted in favor of showing times that are directly dependent on \clingo{}. We used the \clingo{}'s "tweety" configuration and "usc,one" optimization strategy for running the solving process. Further below we explore the differences in solving times between these different strategies.
 
 We can see from the figures that the time increases as the number of possible package dependencies increases. This is because increased number of possible dependencies leads to a larger number of facts and a bigger logic program overall. We measure possible dependencies rather than actual dependencies of the result because possible dependencies better measure the size of the problem space. In particular, when many packages can provide a virtual dependency like the Message Passing Interface (MPI), much of the potential solve space is not present in the final result when a single MPI implementation is chosen.
 
-Figure~\ref{fig:deps_quartz} also shows that there are two major clusters in the execution times. The clusters are separated by a gap in the possible dependencies. One cluster contains packages with less than 200 possible dependencies, whereas, the other major cluster contains packages with more than 400 possible dependencies. This natural clustering occurs because some low-level dependencies have options that can trigger huge potential dependency trees, and the gap is between packages that can include those dependencies and those that cannot.
+Figure~\ref{subfig:deps_quartz_full_a} also shows that there are two major clusters in the execution times. The clusters are separated by a gap in the possible dependencies. One cluster contains packages with less than 200 possible dependencies, whereas, the other major cluster contains packages with more than 400 possible dependencies. This natural clustering occurs because some low-level dependencies have options that can trigger huge potential dependency trees, and the gap is between packages that can include those dependencies and those that cannot.
 
 % TODO: Can we confirm this?? My explanation above is slightly vague -- GBB
 % The gap occurs because of dependency on \emph{cmake}, which itself depends cumulatively on more than 400 packages.
 
-\input{figures/cumulative_quartz_fig.tex}
+% \input{figures/cumulative_quartz_fig.tex}
 
-\input{figures/cdf_quartz_old_vs_clingo.tex}
+% \input{figures/cdf_quartz_old_vs_clingo.tex}
 
 % \input{figures/cumulative_lassen_fig.tex}
 
 Besides dependencies another set of factors that influences the execution times are \clingo{} parameters. Specifically, \clingo{} defines six configuration presets: \emph{frumpy}, \emph{jumpy}, \emph{tweety}, \emph{trendy}, \emph{crafty}, and \emph{handy}. Each preset sets numerous low level parameters that control different aspects of the solver. In our performance study, we specifically focus on three configurations: \emph{tweety} -- geared towards typical ASP programs, \emph{trendy} -- geared towards industrial problems, and \emph{handy} -- geared towards large problems.
 
-Figure~\ref{fig:cdf_quartz} show the cumulative distribution of the solve times under \emph{tweety}, \emph{trendy}, and \emph{handy} configurations on Quartz. The results on Lassen are comparable to Quartz and are ommitted to save space. The vast majority of packages are fully solved in under 25 seconds on both machines. We can also see that there is no difference in ground times between the different configurations. This suggests that most low level parameters that are tweaked by each configuration control the actual solving phase. The figures cleary indicate that \emph{tweety} performs better than the other configurations we benchmarked. This is, therefore, the default configuration used in the concretization process.
+Figures~\ref{subfig:cdf_quartz_ground_a}, \ref{subfig:cdf_quartz_solve_a}, and~\ref{subfig:cdf_quartz_full_a} show the cumulative distribution of the solve times under \emph{tweety}, \emph{trendy}, and \emph{handy} configurations on Quartz. The results on Lassen are comparable to Quartz and are ommitted to save space. The vast majority of packages are fully solved in under 25 seconds on both machines. We can also see that there is no difference in ground times between the different configurations. This suggests that most low level parameters that are tweaked by each configuration control the actual solving phase. The figures cleary indicate that \emph{tweety} performs better than the other configurations we benchmarked. This is, therefore, the default configuration used in the concretization process.
 
-Figure~\ref{fig:cdf_quartz_old_vs_new} shows the the cumulative distribution of the old concretizer concretization times and \clingo{} total solve times (under \emph{tweety} configuration) on Quartz. Figures~\ref{fig:deps_quartz} and~\ref{subfig:cdf_quartz_ground} show us that about 2.2K packages belong to the cluster with less than 200 dependencies, which means that the dependency trees of these packages are smaller. This leads to shorter ground and solve times and that makes \clingo{}'s times correspond to old concretizer times for these packages. The packages in the other cluster have potentially huge dependency trees that increase the total solving times and that is reflected in the deviation of \clingo{}'s times in Figure~\ref{fig:cdf_quartz_old_vs_new} from the old concretizer times.
+Figure~\ref{subfig:cdf_old_vs_new_a} shows the the cumulative distribution of the old concretizer concretization times and \clingo{} total solve times (under \emph{tweety} configuration) on Quartz. Figures~\ref{subfig:deps_quartz_full_a} and~\ref{subfig:cdf_quartz_ground_a} show us that about 2.2K packages belong to the cluster with less than 200 dependencies, which means that the dependency trees of these packages are smaller. This leads to shorter ground and solve times and that makes \clingo{}'s times correspond to old concretizer times for these packages. The packages in the other cluster have potentially huge dependency trees that increase the total solving times and that is reflected in the deviation of \clingo{}'s times in Figure~\ref{subfig:cdf_old_vs_new_a} from the old concretizer times.
 
 % - other properties?
 % - --single-shot vs. no single-shot?
@@ -59,10 +61,12 @@ Figure~\ref{fig:cdf_quartz_old_vs_new} shows the the cumulative distribution of 
 
 In this subsection, we examine the performance of the solver with the \emph{reuse} flag switched on. As described in Section~\ref{sec:reuse}, reusing packages in a buildcache increases the number of facts proportionally to the number of cached packages.
 
-\input{figures/e4s_cache_quartz_fig.tex}
+% \input{figures/e4s_cache_quartz_fig.tex}
 
 % \input{figures/e4s_cache_lassen_fig.tex}
 
 We specifically focus on the packages in the ECP Extreme-scale Scientific Software Stack (E4S) project~\cite{e4s}. It is a community effort to provide open source software packages for developing, deploying, and running scientific applications on HPC platforms. There are just under 600 packages in E4S, but the buildcache of the project targets different architectures, operating systems, and compilers, thereby totaling over 60K pre-compiled packages (hash signatures). We divided the buildcache into 4 groups: full buildcache (63099 packages), buildcache restricted to the \texttt{ppc64le} architecture (27160 packages), buildcache restricted to the \texttt{rhel7} OS (15255 packages), and buildcache restricted to both \texttt{ppc64le} architecture and the \texttt{rhel7} OS (6804 packages). Benchmarking across an increasing size of the buildcache provides us with a better understanding of the impact of the package resuse functionality.
 
-Figure~\ref{fig:cdf_e4s_quartz} show the cumulative distribution of the solve times of the E4S packages with increasing buildcache on Quartz. The results on Lassen are comparable to Quartz and are ommitted to save space. We first observe that the setup times are generally higher than the actual solve times, even for smaller buildcaches. This happens because when we reuse packages we need to encode much more facts than usual, which are facts representing the dependencies. The figures also show that there is a significant jump in the solve times for the biggest buildcache. The majority of this jump occurs in the setup phase, as shown in the figures, suggesting that the runtime is being dominated by the serial process of generating facts for the solver, rather than exponential explosion in the solver. This suggests positive outcomes for future work improving performance in this area.
+Figures~\ref{subfig:cdf_e4s_quartz_load_a}, \ref{subfig:cdf_e4s_quartz_solve_a}, and~\ref{subfig:cdf_e4s_quartz_full_a} show the cumulative distribution of the solve times of the E4S packages with increasing buildcache on Quartz. The results on Lassen are comparable to Quartz and are ommitted to save space. We first observe that the setup times are generally higher than the actual solve times, even for smaller buildcaches. This happens because when we reuse packages we need to encode much more facts than usual, which are facts representing the dependencies. The figures also show that there is a significant jump in the solve times for the biggest buildcache. The majority of this jump occurs in the setup phase, as shown in the figures, suggesting that the runtime is being dominated by the serial process of generating facts for the solver, rather than exponential explosion in the solver. This suggests positive outcomes for future work improving performance in this area.
+
+% \input{figures/perf_all_fig.tex}
