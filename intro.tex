@@ -2,11 +2,34 @@
 \section{Introduction}
 %-------------------------------------------------------------------------------
 \label{sec:intro}
-- Todd
 
-A paragraph of text goes here. Lots of text. Plenty of interesting
-text. Text text text text text text text text text text text text text
-text text text text text text text text text text text text text text
-text text text text text text text text text text text text text text
-text text text text text text text.
-More fascinating text. Features galore, plethora of promises.
+Managing dependencies for scientific software has been notoriously difficult for
+years~\cite{hoste+:pyhpc12,gamblin+:sc15,dubois2003johnny,hochstein+:2011-build}.
+Scientific software is typically built from source to achieve the best performance, and
+configuring build systems to target speicfic machines, dependency versions, and
+compilers requires painstaking care if done manually. In the early 2010's, two main
+package managers emerged to tackle this problem for the HPC space:
+Spack~\cite{gamblin+:sc15} and EasyBuild~\cite{hoste+:pyhpc12}.
+
+
+\cite{}
+
+E4S is ~100 packages and 400 dependencies
+many conditional dependencies
+many version constraints
+many optionally enabled packages
+many virtual packages
+
+
+
+
+
+
+Our contributions are:
+
+\begin{enumerate}
+\item A general mapping of HPC dependency compatibility semantics and optimization rules to ASP;
+\item A technique to optimize for reuse of existing builds in combinatorial package solves;
+\item An implementation of ASP solver in {\it Spack}, a popular HPC package manager; and
+\item An evaluation of our system's performance on large, real-world HPC package repositories.
+\end{enumerate}
