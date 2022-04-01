@@ -34,10 +34,10 @@ Rules are instantiated with all possible substitutions for variables.
   optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Depencency) :- node(Package), depends_on(Package, Dependency).
+  node(Dependency) :- node(Package), depends_on(Package, Dependency).
 \end{minted}
 
-The rule here translates roughtly to ``If a package is in the graph and it depends on another package, that package must be in the graph''.
+The rule here translates roughly to ``If a package is in the graph and it depends on another package, that package must be in the graph''.
 
 Two particular types of rules are important to understand the power of ASP: \textit{integrity constraints} and \textit{choice rules}.
 
@@ -50,7 +50,7 @@ In AnsProlog, these are represented by a headless rule.
   optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Depencency) :- node(Package), depends_on(Package, Dependency).
+  node(Dependency) :- node(Package), depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 \end{minted}
 
@@ -63,7 +63,7 @@ A choice rule is (optionally) constrained on either side to specify the minimum 
   optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Depencency) :- node(Package), depends_on(Package, Dependency).
+  node(Dependency) :- node(Package), depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 
   possible_version("hdf5", "1.13.1").
