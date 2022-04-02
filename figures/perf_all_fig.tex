@@ -14,18 +14,10 @@
     \label{subfig:deps_quartz_full_a}
         \includegraphics[width=\perfsubfigwidth\textwidth]{figures/perf/deps_quartz_total_fig.pdf}
     }\hfill%
-    \subfloat[][CDF of ground times under various configurations]{
-    \label{subfig:cdf_quartz_ground_a}
-        \includegraphics[width=\perfsubfigwidth\textwidth]{figures/perf/cdf_quartz_ground_fig.pdf}
-    }\\%
-    \subfloat[][CDF of solve times under various configurations]{
-    \label{subfig:cdf_quartz_solve_a}
-        \includegraphics[width=\perfsubfigwidth\textwidth]{figures/perf/cdf_quartz_solve_fig.pdf}
-    }\hfill%
     \subfloat[][CDF of full solving times under various configurations]{
     \label{subfig:cdf_quartz_full_a}
         \includegraphics[width=\perfsubfigwidth\textwidth]{figures/perf/cdf_quartz_total_fig.pdf}
-    }\hfill%
+    }\\
     \subfloat[][CDF of setup times for different cache sizes across all E4S packages]{
     \label{subfig:cdf_e4s_quartz_load_a}
         \includegraphics[width=\perfsubfigwidth\textwidth]{figures/perf/cdf_e4s_cache_quartz_setup_fig.pdf}
@@ -33,16 +25,16 @@
     \subfloat[][CDF of solve times for different cache sizes across all E4S packages]{
     \label{subfig:cdf_e4s_quartz_solve_a}
         \includegraphics[width=\perfsubfigwidth\textwidth]{figures/perf/cdf_e4s_cache_quartz_solve_fig.pdf}
-    }\\%
+    }\hfill%
     \subfloat[][CDF of total solver times for different cache sizes across all E4S packages]{
     \label{subfig:cdf_e4s_quartz_full_a}
         \includegraphics[width=\perfsubfigwidth\textwidth]{figures/perf/cdf_e4s_cache_quartz_total_fig.pdf}
-    }\hspace{0.5cm}%
+    }\hfill%
     \subfloat[][CDF of old concretizer concretization times and \clingo{} total solve times]{
     \label{subfig:cdf_old_vs_new_a}
         \includegraphics[width=\perfsubfigwidth\textwidth]{figures/perf/cdf_quartz_old_vs_clingo.pdf}
     }
-    
+
     \caption{Performance figures of solving times across all packages on Quartz.}
     \label{fig:all_perf}
 
