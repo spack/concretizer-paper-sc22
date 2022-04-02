@@ -104,7 +104,7 @@ A rule ensures that the user's choice to set the target to a specific value is r
 node_target(P, T) :- node(P), node_target_set(P, T).
 \end{minted}
 
-An integrity constraints prevents to choose a target not supported by the current compiler:
+An integrity constraints prevents choosing a target not supported by the current compiler:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 :- node_target(P, T),
