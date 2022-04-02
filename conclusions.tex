@@ -2,10 +2,15 @@
 \section{Conclusions}
 %-------------------------------------------------------------------------------
 \label{sec:conclusions}
-- TBD
-A paragraph of text goes here. Lots of text. Plenty of interesting
-text. Text text text text text text text text text text text text text
-text text text text text text text text text text text text text text
-text text text text text text text text text text text text text text
-text text text text text text text.
-More fascinating text. Features galore, plethora of promises.
+
+The complexity of software dependencies and optimization needs in HPC creaates a particular challenge for package management in the HPC space.
+Ad-hoc techniques for dependency resolution have proven to require substantial investment of programmer hours to manage even a small subset of the possible space of HPC software configurations.
+
+In this paper we introduced a new dependency resolution method for \spack{}, an HPC package manager.
+This new dependency resolution method uses Answer Set Programming to create general mapping of Spack's DSL, compatibility semantics, and optimization rules in a maintainable, declarative syntax.
+It has also allowed us to implement new functionality for \spack{}, such as targeted reuse of existing installations and binary packages, that was simply infeasible with previous methods reliant on a greedy fixed-point algorithm.
+
+We also showed the performance of the new concretization algorithm is competitive in most cases with the previous algorithm.
+Performance of the reuse capablity scaled to tens of thousands of potentially reusable binary packages.
+
+The improvements we introduced in this paper are not merely theoretical --- they are seeing worldwide use in production through the most recent major version release of \spack{}.
