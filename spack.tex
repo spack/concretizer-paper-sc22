@@ -188,10 +188,10 @@ additional dependencies. Then the set of packages and constraints needed for thi
 abstract spec is
 
 \begin{itemize}
-\item {\tt example@1.0.0} constraint from the abstract spec
-\item {\tt bzip2@1.0.7:} constraint from example package file
-\item {\tt zlib@1.2.11} constraint from abstract spec
-\item {\tt mpich} concrete replacement for virtual dependency
+\item {\tt example@1.0.0} constraint from the abstract spec: example version 1.0.0
+\item {\tt bzip2@1.0.7:} constraint from example package file: bzip2 version 1.0.7 or higher
+\item {\tt zlib@1.2.11} constraint from abstract spec: zlib version 1.2.11
+\item {\tt mpi} constraint from example package file: any MPI implementation
 \end{itemize}
 
 The original concretizer would simply proceed until all decisions had been made,
@@ -205,20 +205,21 @@ example@1.0.0+bzip%gcc@11.2.0 arch=linux-centos8-skylake
   ^mpich@3.1 pmi=pmix %gcc@11.2.0 arch=linux-centos8-skylake
 \end{minted}
 
-Here, all dependencies are expanded, all node parameters (variants, compilers, targets,
-etc.) have been bassigned and no constraints are violated. None of these nodes are fully
-concrete, so additional decisions must be made from preferences. We will consider only
-\texttt{example} since we have its package file, but the same process would apply to
-\texttt{zlib}, \texttt{bzip2}, and \texttt{mpich}. The original Spack concretizer used a
-greedy, fixed-point algorithm. The issue with this algorithm (and all greedy algorithms)
-is that it only made {\it local} decisions about dependencies and node parameters, and
-it could not backtrack to undo decisions that it made. So, for example, the original
-concretizer might choose version 1.0.7 for {\tt bzip2} here, but if the {\tt mpich}
-package {\it conflicts} with {\tt bzip2@:1.0.7:} (versions of {\tt bzip} up to and
-including 1.0.7), then concretization may fail even though {\tt 1.0.8} would have
-worked. The solve is thus {\it incomplete}. Similarly, because the original concretizer
-would only make local optimization decisions, it made no global guarantees of
-optimality.
+Here, all dependencies are expanded, all virtual packages have been replaced, all node parameters (variants,
+compilers, targets, etc.) have been assigned and no constraints are
+violated. Decisions regarding node attributes not specified in the abstract spec
+nor in the package constraints were made from defaults. The original
+Spack concretizer used a greedy, fixed-point algorithm. The issue with
+this algorithm (and all greedy algorithms) is that it only made {\it
+  local} decisions about dependencies and node parameters, and it
+could not backtrack to undo decisions that it made. So, for example,
+imagine that {\tt mpich} had a conflict with {\tt bzip2@1.0.7}. In our
+example, we were lucky that the concretizer selected {\tt bzip2@1.0.8} to satisfy
+the constraint {\tt bzip2@1.0.7:} (recall that means \texttt{bzip2} at version 1.0.7
+or higher). Had the default choice been {\tt bzip2@1.0.7}, there would have been no
+way for the algorithm to backtrack, and \spack would raise a concretization error. The solve is thus {\it incomplete}. Similarly, because the
+original concretizer would only make local optimization decisions, it
+made no global guarantees of optimality.
 
 %For \texttt{example}, the version is already fully constrained. Barring user
 %configuration, the default compiler in \spack is the newest version of \texttt{gcc}
