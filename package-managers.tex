@@ -8,14 +8,14 @@ The idea of ``sofware release management'' for large numbers of independent pack
 \subsection{Single-prefix Package Managers}
 
 System package managers such as RPM, Yum, and APT~\cite{foster+:rpm03,silva:apt01,yum} are integrated with most OS distributions, and are used to ensure system software dependencies are installed along with system software.
-These tools focus on managing a single softare stack, built with a single compiler, which works well for system software and drivers, which must be common across all software on the system.
+These tools focus on managing a single software stack, built with a single compiler, which works well for system software and drivers, which must be common across all software on the system.
 They allow only one version of a package and install everything to a known common location.
 
 Portage systems such as Gentoo, BSD Ports, Macports, and Homebrew typically operate in a similar solving space to the binary system package managers previously discussed, although they differ by building packages from source.
 Some portage systems allow multiple versions of a package to be installed simultaneously~\cite{groffen:gentoo-prefix}, but the burden is on the package creator to manage conflicts.
 In practice, this leads to systems that manage a very small subset of possible configurations, prioritizing correctness of known configurations over exploration of the configuration space.
 
-Even this limited space of softare management, the version selection problem, was proven to be NP-complete by Di Cosmo et al.~\cite{dicosmo:edos,mancinelli+:ase06-foss-distros}.
+Even this limited space of software management, the version selection problem, was proven to be NP-complete by Di Cosmo et al.~\cite{dicosmo:edos,mancinelli+:ase06-foss-distros}.
 Early work on solving the version selection problem with SAT solvers led to the Mancoosi project, which focused on a modular package manager with interchangeable solvers~\cite{abate2012dependency,abate-2013-modular-package-manager}.
 The Mancoosi project published the Common Upgradeability Description Format (CUDF) as an attempt to standardize the interface between package managers and solvers.
 
