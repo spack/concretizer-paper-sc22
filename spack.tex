@@ -3,78 +3,111 @@
 %-------------------------------------------------------------------------------
 \label{sec:software-model}
 
-\spack{} is a package manager designed to support High Performance Computing (HPC) use-cases~\cite{gamblin+:sc15}.
-\spack{} allows multiple installations of a single package to coexist on the system to support scientific research and the requirements of scientific software This greatly expands the space of possible build configurations necessary to support, and is the major driver behind other design decisions in \spack{}.
+\spack~\cite{gamblin+:sc15} is a package manager designed to support High Performance
+Computing (HPC). Like functional package managers, \spack installs packages in separate
+prefixes to allow arbitrarily many installations to coexist. This enables users to build
+many different variants of a package, e.g., with different compilers, different MPI
+implementations, different flags, or with combinations of all three of these parameters.
+This greatly expands the space of possible build configurations.
 
-At a high level \spack{} can be broken down into three primary components: A ``spec syntax'' to represent individual builds from the combinatorial build space, a ``package DSL'' to specify build instructions for individual packages, and the ``concretizer'', the internal solving algorithm that takes abstract requests from the user as input and outputs concrete decisions about how to build a package or set of packages. While this paper is primarily focused ont he concretizer, we will discuss all three components in this section for background.
+At a high level, \spack can be broken down into three primary components. The {\it spec
+  syntax} allows users to easily specify and constrain builds on the command line. The
+{\it package domain-specific language (DSL)} expresses parameterized build recipes for
+software packages, and the {\it concretizer} is Spack's dependency solver. The
+concretizer combines {\it abstract} (i.e., underspecified) spec constraints from the
+user and from packages, and it produces a {\it concrete}, or fully specified package
+spec that can be installed. We provide an overview of these pieces here but full details
+are in the original paper~\cite{gamblin+:sc15}.
 
 \subsection{Spec Syntax}
 
-The combinatorial space of possible \spack{} builds is huge. For a given package, decisions must be made about what version to build, what options to build with, what architecture to target, and what compiler to use. Many packages have tens of direct and transitive dependencies, and for each dependency the same decisions must be made. Furthermore, there are packages that are interchangeable at the Application Programming Interface (API) level, which can be chosen among arbitrarily for a particular build -- the cannonical example in the HPC community being the Message Passing Interface (MPI) implementations. We will refer to such interchangeable components as ``virtual packages'' and ``virtual dependencies''.For each virtual dependency, even more options arise to complicate the build space as an implementation must be selected in addition to all of the decisions necessasary to build that implementation.
-
-The spec syntax in \spack{} allows users to specify points or spaces within this combinatorial build space. For example, often a users may only care to build a particular package, with no additional constraints. This portion of the build space is all possible builds of that package, but not other packages. It can be represented in the spec syntax by the package name. For example:
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
-hdf5  # specifies the space of any build of hdf5
-\end{minted}
-Particular sigils (presented in Table~\ref{tab:sigil}) are used to specify other attributes of the package that the user may care about. This allows the user to control the version, compiler, compiler version, architecture, and build options for the package.
+Spack calls its internal dependency graphs ``specs'' because they specify parameters of
+a software installation along with those of its dependencies. Specs are directed acyclic
+graphs where nodes are packages and edges are dependency relationsihps. The ``spec
+syntax'' is a shorthand for expressing constraints on these graphs. Each node of the
+graph has parameters, including:
+\begin{enumerate}
+\item the package name;
+\item the version to build;
+\item variants (compile-time build options);
+\item the compiler to build with and its version;
+\item compiler flags;
+\item the target operating system;
+\item the target microarchitecture; and
+\item the package installation's dependencies.
+\end{enumerate}
 
 \input{sigil-tab}
 
-The spec syntax is telescoping and fully recursive. Recursion is what allows full control over the build space -- any attribute that can be set on the root can be set on any dependency. For example, the spec below constrains the build to any possible build of the package \texttt{hdf5} at version 1.10.2 that depends on a build of the package \texttt{zlib} built with the \texttt{gcc} compiler and a build of the package \texttt{cmake} built to target the \texttt{aarch64} architecture.
+The spec syntax in \spack allows users to specify preferences within this combinatorial
+build space. In the simplest case, a user might want to build a particular package {\it
+  without} any concern for its configuration. In this case they would write:
+\begin{minted}[fontsize=\small]{text}
+spack install hdf5
+\end{minted}
+Spack will install {\tt hdf5} without any particular customization.
+Table~\ref{tab:sigil} shows examples of {\it sigils} that can be used to specify
+specific constraints on specs, including any of the attributes listed above. The spec
+syntax is fully recursive, in that users can specify constraints on dependencies using
+the {\tt \^{}} (``depends on'') sigil. For example, the spec below:
 \begin{minted}[fontsize=\small, bgcolor=bg]{text}
 hdf5@1.10.2 ^zlib%gcc ^cmake target=aarch64
 \end{minted}
 
-While in theory it is possible to completely constrain a build via the spec syntax, we find that in practice users care about a very small set of constraints, and rely on the concretizer to fill in defaults for the rest of the build. We refer to a portion of the build space in \spack{} as a ``spec'', and a single point as a ``concrete spec''. A spec is represented internally as a directed acyclic graph (DAG) where edges are dependency relationships and nodes are packages.
+means ``any possible build of the package \texttt{hdf5} at version {\tt 1.10.2} that
+depends on a build of the package \texttt{zlib} built with the \texttt{gcc} compiler and
+a build of the package \texttt{cmake} built to target the \texttt{aarch64}
+architecture''. While users could completely constrain a build via the spec syntax, in
+practice they only care about a comparatively small set of constraints, and they rely on
+concretization to select values for unspecified parameters. We refer to a portion of the
+build space in \spack as an ``abstract spec'', and a fully specified build as a
+``concrete spec''.
 
 \subsection{Package DSL}
-\label{subsec:pack-dsl}
-
-The package DSL in \spack{} is what allows developers to expose such a huge combinatorial space of possible builds. A \spack{} package consists of two parts: metadata on the requirements for any build of the package, and build instructions.
-
-Unlike many systems, a package in \spack{} is fully templated. The input to the build instructions includes a fully concrete spec, and the build instructions translate that spec into commands to the build system of the package.
-
-The package metadata requires more explanation. The package metadata defines the parameters of the build space for the package. This is where the package defines the build options, called ``variants'', that can be referenced for that package by the spec syntax. It is also where versions of the package are listed. The package metadata also constraints the build space for the package. For example, a package might register conflicts with a particular compiler with which it is known not to compile. Lastly, and most interestingly, the package metadata defines the dependency relationships among packages. The package may depend on any spec for the dependency using the spec syntax discussed above.
+\label{sec:package-dsl}
 
 \begin{figure}
-\begin{minted}[fontsize=\footnotesize, bgcolor=bg]{python}
-# This is the classname for the package `expkg`
-class Expkg(Package):
-    '''An aptly named example package that depends on zlib
-    and optionally bzip2 for compression.'''
+\begin{minted}[linenos,numbersep=-5pt,fontsize=\footnotesize]{python}
+  # This is the classname for the package `example`
+  class Example(Package):
+      '''An example package that depends on zlib, mpi
+      and optionally bzip2 for compression.'''
 
-    version("1.1.0")
-    version("1.0.0")
+      version("1.1.0")
+      version("1.0.0")
 
-    variant("bzip", default=True,
-            description="use bzip enhanced compression")
+      variant("bzip", default=True,
+              description="use bzip enhanced compression")
 
-    # Depends on bzip2 or later for enhanced compression
-    depends_on("bzip2@1.0.7:", when="+bzip")
-    depends_on("zlib")  # depends on zlib
-    # Newer versions require newer versions of zlib
-    depends_on("zlib@1.2.8:", when="@1.1.0:")
+      # Depends on bzip2 or later for enhanced compression
+      depends_on("bzip2@1.0.7:", when="+bzip")
+      depends_on("zlib")  # depends on zlib
+      # Newer versions require newer versions of zlib
+      depends_on("zlib@1.2.8:", when="@1.1.0:")
 
-    # Known failure when building with intel compilers
-    conflicts("%intel")
-    # Does not support architectures derived from ARM64
-    conflicts("target=aarch64:")
+      # Depends on *some* MPI implementation
+      depends_on("mpi")
 
-    def install(self, spec, prefix):
-        # Translate spec into arguments to build system
-        config_args = ['--with-zlib=%s' % spec[zlib'].prefix]
+      # Known failure when building with intel compilers
+      conflicts("%intel")
+      # Does not support architectures derived from ARM64
+      conflicts("target=aarch64:")
 
-        if 'bzip2' in spec:
-            bz_arg = '--with-bzip=%s' % spec[bzip2'].prefix
-        else:
-            bz_arg = '--without-bzip'
-        config_args.append(bz_arg)
+      def install(self, spec, prefix):
+          # Translate spec into arguments to build system
+          config_args = ['--with-zlib=%s' % spec[zlib'].prefix]
 
-        # Run the build system --
-        # configure and make methods automatically generated
-        configure(*config_args)
-        make()
-        make('install')
+          if 'bzip2' in spec:
+              bz_arg = '--with-bzip=%s' % spec[bzip2'].prefix
+          else:
+              bz_arg = '--without-bzip'
+          config_args.append(bz_arg)
+
+          # Run the build system --
+          # configure and make methods automatically generated
+          configure(*config_args)
+          make()
+          make('install')
 \end{minted}
 \caption{
   A {\tt package.py} file written in Spack's embedded DSL.
@@ -82,49 +115,82 @@ class Expkg(Package):
 }
 \end{figure}
 
-Consider the example package in Figure~\ref{fig:example-spack-package}. This is a simple package. It has two versions, 1.0.0 and 1.1.0. It has one build option, controlling some functionality and requiring an additional dependency. Its dependency requirements vary slightly by the version of the package. It has some configurations in which it's known not to build successfully. That information is all given to the concretizer, and once a concrete spec is generated, the build instructions are fairly simple.
+Figure~\ref{fig:example-spack-package} shows Spack's package DSL. Unlike many systems, a
+package in \spack is a {\it parameterized} Python class. There is {\it one} package
+recipe for each package, and it is {\it instantiated} for each concrete spec that Spack
+builds. The {\tt install()} function on line 26 takes a fully concrete spec as one of
+its parameters, and its job is to install {\it that} particular configuration of the
+{\tt example} package into the specified {\tt prefix}.
+
+The install instructions on lines 26-37 do the work of the build, but more interesting
+for this paper are the metadata directives on lines 6-24. This package has two possible
+versions, {\tt 1.0.0} and {\tt 1.1.0}. It has one build option, or ``variant'', called
+{\tt bzip} that enables the dependency on {\tt bzip2}. Its dependency on {\tt zlib} is
+dependent on its version. Conditions like these are specified using {\tt when} clauses
+within directives. It has some {\tt conflicts} for which it is known not to build
+successfully. Dependency constraints, conflicts, and {\tt when} clauses are all
+specified concisely using the  spec syntax.
+%
+The dependency on {\tt mpi} on line 19 is special. Spack provides support for packages
+that are source-compatible (API-compatible), like MPI. There is no concrete {\tt mpi}
+package in Spack, rather there are several {\tt mpi} {\it providers}, like {\tt mpich},
+{\tt openmpi}, etc. This package can be instantiated with {\it any} of these MPI
+providers. We thus call {\tt mpi} a``virtual dependency''. {\tt blas} and {\tt lapack}
+are two other common examples in HPC.
+
+In summary, Spack can build {\tt example} in {\it many} different ways. The metadata in
+the package DSL is what allows developers to expose a huge combinatorial build
+configuration space, and it is the {\it concretizer}'s job to select a configuration
+from this space.
 
 \subsection{Concretization}
-Concretization is the \spack{} terminology for dependency resolution. It takes \emph{abstract specs} from the user and turns them into \emph{concrete specs} that can be combined with the package files to create actionable install instructions.
-Dependency resolution is a key component of any package manager, but as an HPC package manager the solution space for concretization in \spack{} is larger than in other package managers.
-In addition to package names and versions, \spack{} solves for the compiler and compiler version used, compiler flags, build options (\emph{variants}), target architecture and operating system.
 
-There are three primary inputs to concretization in \spack{}, and we have already discussed two of them. The inputs to the concretization algorithm are the package constraints, the abstract spec input by the user, and the user configuration.
 
-The user configuration allows the user to change the default behaviors of \spack{}, but is not necessary to understand the workings of the concretizer. In the following discussion of the concretizer, in many places the algorithm will ``choose the default'' or ``choose the most preferred ...'' when otherwise unconstrained. In all of those cases, \spack{} has builtin defaults that can be overriden with user configuration.
+For each virtual
+dependency, even more options arise to complicate the build space as an implementation
+must be selected in addition to all of the decisions necessasary to build that
+implementation.
+
+Concretization is the \spack terminology for dependency resolution. It takes \emph{abstract specs} from the user and turns them into \emph{concrete specs} that can be combined with the package files to create actionable install instructions.
+Dependency resolution is a key component of any package manager, but as an HPC package manager the solution space for concretization in \spack is larger than in other package managers.
+In addition to package names and versions, \spack solves for the compiler and compiler version used, compiler flags, build options (\emph{variants}), target architecture and operating system.
+
+There are three primary inputs to concretization in \spack, and we have already discussed two of them. The inputs to the concretization algorithm are the package constraints, the abstract spec input by the user, and the user configuration.
+
+The user configuration allows the user to change the default behaviors of \spack, but is not necessary to understand the workings of the concretizer. In the following discussion of the concretizer, in many places the algorithm will ``choose the default'' or ``choose the most preferred ...'' when otherwise unconstrained. In all of those cases, \spack has builtin defaults that can be overriden with user configuration.
 
 On a conceptual level, we can think of the concretizer as accomplishing two tasks. It determines the set of packages needed in the spec DAG, and it fills in any missing information about how to build each node in the DAG. For each decision it makes, it first considers the constraints of the build space generated by the package, constrains those further by the abstract spec, and chooses any additional degrees of freedom from the preferences expressed in the user configuration.
 
-Consider our package \texttt{expkg} from Section~\ref{subsec:pack-dsl}, we will concretize the abstract spec:
+Consider our package \texttt{example} from Section~\ref{sec:package-dsl}, we will concretize the abstract spec:
 \begin{minted}[fontsize=\small, bgcolor=bg]{text}
-expkg@1.0.0 ^zlib@1.2.11
+example@1.0.0 ^zlib@1.2.11
 \end{minted}
 We will assume for the moment that neither \texttt{zlib} nor \texttt{bzip2} have any additional dependencies. Then the set of packages and constraints needed for this abstract spec is
 
 \begin{itemize}
-\item \texttt{expkg@1.0.0} constraint from the abstract spec \\
-\item \texttt{bzip2@1.0.7:} constraint from expkg package file \\
+\item \texttt{example@1.0.0} constraint from the abstract spec \\
+\item \texttt{bzip2@1.0.7:} constraint from example package file \\
 \item \texttt{zlib@1.2.11} constraint from abstract spec \\
 \end{itemize}
 
 None of these nodes are fully concrete, so additional decisions must be made from preferences.
-We will consider only \texttt{expkg} since we have its package file, but the same process would apply to \texttt{zlib} and \texttt{bzip2}.
+We will consider only \texttt{example} since we have its package file, but the same process would apply to \texttt{zlib} and \texttt{bzip2}.
 
-For \texttt{expkg}, the version is already fully constrained.
-Barring user configuration, the default compiler in \spack{} is the newest version of \texttt{gcc} available on the system, so the concretizer may choose \texttt{gcc@11.2.0}.
+For \texttt{example}, the version is already fully constrained.
+Barring user configuration, the default compiler in \spack is the newest version of \texttt{gcc} available on the system, so the concretizer may choose \texttt{gcc@11.2.0}.
 For architecture options, the default is the current architecture. We will assume the algorithm is running on a linux system running \texttt{centos8} on a \texttt{skylake} CPU.
-Our package file for \texttt{expkg} specifies the default value for the variant \texttt{bzip} is True, so the concretizer chooses that value in the absence of user configuration to the contrary.
+Our package file for \texttt{example} specifies the default value for the variant \texttt{bzip} is True, so the concretizer chooses that value in the absence of user configuration to the contrary.
 This creates a feedback loop with the list of nodes, increasing the complexity of the algorithm.
 The concrete spec generated would be:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{text}
-expkg@1.0.0+bzip%gcc@11.2.0 arch=linux-centos8-skylake
+example@1.0.0+bzip%gcc@11.2.0 arch=linux-centos8-skylake
   ^bzip2@1.0.8 ...
   ^zlib@1.2.11 ...
 \end{minted}
 
 Where the elided values are the details of the dependency packages we did not consider for this exercise.
 
-Early versions of \spack{} used a custom greedy fixed-point algorithm for concretization.
+Early versions of \spack used a custom greedy fixed-point algorithm for concretization.
 That algorithm was not complete, and did not implement sufficient backtracking to resolve all theoretically solvable abstract specs.
-For this work, we have implemented a new, complete concretizer for \spack{} by using Answer Set Programming and Clingo.
+For this work, we have implemented a new, complete concretizer for \spack by using Answer Set Programming and Clingo.

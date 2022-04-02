@@ -9,20 +9,19 @@
         \hline
         \textbf{Sigil} & \textbf{Examples} & \textbf{Meaning} \\
         \hline
-        \texttt{\%} & \texttt{hdf5\%gcc}    & Constrain the build space to use a particular compiler \\
+        \texttt{\%} & \texttt{hdf5\%gcc}    & Use a particular compiler \\
         \hline
-        \texttt{@}  & \texttt{hdf5@1.10.2}  & Constrain the build space to a particular version or set of versions \\
-                    & \texttt{hdf5\%gcc@10.3.1} & Constrain the build space to a particular compiler version or set of compiler versions \\
+        \texttt{@}  & \texttt{hdf5@1.10.2}  & Require version(s) \\
+                    & \texttt{hdf5\%gcc@10.3.1} & Require compiler version(s) \\
         % \multicolumn{3}{l}{\texttt{@}}
         \hline
-        \texttt{+}  & \texttt{hdf5+mpi}     & \multirow{3}{3.5cm}{Constrain the build space to require (\texttt{+}) or forbid (\texttt{\~{}, -}) a boolean build option} \\
+        \texttt{+}  & \texttt{hdf5+mpi}     & \multirow{3}{3.5cm}{Enable (\texttt{+})/disable (\texttt{\~{}}) variant} \\
         \texttt{\~} & \texttt{hdf5\~{}mpi}    \\
-        \texttt{-}  & \texttt{hdf5-mpi}       \\
+%        \texttt{-}  & \texttt{hdf5-mpi}       \\
         \hline
-        \texttt{key=value} & \texttt{hdf5 mpi=true} & \multirow{3}{3.5cm}{Constrain the build space to require a particular build option value or architecture value} \\
+        \texttt{key=value} & \texttt{hdf5 mpi=true} & \multirow{3}{3.5cm}{Require a particular variant or build target value} \\
                            & \texttt{hdf5 api=default}      \\
                            & \texttt{hdf5 target=skylake}   \\
         % \texttt{key=value} & \shortstack{\texttt{hdf5 mpi=true} \\ \texttt{hdf5 api=default} \\ \texttt{hdf5 target=skylake}} & Constrain the build space to require a particular build option value or architecture value. \\
     \end{tabular}
 \end{table}
-
