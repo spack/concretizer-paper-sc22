@@ -6,7 +6,7 @@
 \spack{} is a package manager designed to support High Performance Computing (HPC) use-cases~\cite{gamblin+:sc15}.
 \spack{} allows multiple installations of a single package to coexist on the system to support scientific research and the requirements of scientific software This greatly expands the space of possible build configurations necessary to support, and is the major driver behind other design decisions in \spack{}.
 
-At a high level \spack{} can be broken down into three primary components: A ``spec syntax'' to represent individual builds from the combinatorial build space, a ``package DSL'' to specify build instructions for individual packages, and the ``concretizer'', the internal algorithm that takes abstract requests from the user as input and outputs concrete decisions about how to build a package or set of packages. While this paper is primarily focused ont he concretizer, we will discuss all three components in this section for background.
+At a high level \spack{} can be broken down into three primary components: A ``spec syntax'' to represent individual builds from the combinatorial build space, a ``package DSL'' to specify build instructions for individual packages, and the ``concretizer'', the internal solving algorithm that takes abstract requests from the user as input and outputs concrete decisions about how to build a package or set of packages. While this paper is primarily focused ont he concretizer, we will discuss all three components in this section for background.
 
 \subsection{Spec Syntax}
 
@@ -38,20 +38,22 @@ The package metadata requires more explanation. The package metadata defines the
 
 \begin{figure}
 \begin{minted}[fontsize=\footnotesize, bgcolor=bg]{python}
-# This is the classname for the package `mypackage`
-class Mypackage(Package):
+# This is the classname for the package `expkg`
+class Expkg(Package):
+    '''An aptly named example package that depends on zlib
+    and optionally bzip2 for compression.'''
 
     version("1.1.0")
     version("1.0.0")
 
-    variant("compression", default=True,
-            description="Build with zlib compression support")
+    variant("bzip", default=True,
+            description="use bzip enhanced compression")
 
-    # Depends on zlib 1.2.0 or later for compression support
-    depends_on("zlib@1.2.0:", when="+compression")
-    depends_on("mpi")  # Depends on hdf5
-    # Newer versions require mpi interface version 3 or higher
-    depends_on("mpi@3:", when="@1.1.0:")
+    # Depends on bzip2 or later for enhanced compression
+    depends_on("bzip2@1.0.7:", when="+bzip")
+    depends_on("zlib")  # depends on zlib
+    # Newer versions require newer versions of zlib
+    depends_on("zlib@1.2.8:", when="@1.1.0:")
 
     # Known failure when building with intel compilers
     conflicts("%intel")
@@ -60,13 +62,13 @@ class Mypackage(Package):
 
     def install(self, spec, prefix):
         # Translate spec into arguments to build system
-        config_args = ['--with-mpi=%s' % spec['mpi'].prefix]
+        config_args = ['--with-zlib=%s' % spec[zlib'].prefix]
 
-        if 'zlib' in spec:
-            zlib_arg = '--with-zlib=%s' % spec['zlib'].prefix
+        if 'bzip2' in spec:
+            bz_arg = '--with-bzip=%s' % spec[bzip2'].prefix
         else:
-            zlib_arg = '--without-zlib'
-        config_args.append(zlib_arg)
+            bz_arg = '--without-bzip'
+        config_args.append(bz_arg)
 
         # Run the build system --
         # configure and make methods automatically generated
@@ -83,6 +85,9 @@ class Mypackage(Package):
 Consider the example package in Figure~\ref{fig:example-spack-package}. This is a simple package. It has two versions, 1.0.0 and 1.1.0. It has one build option, controlling some functionality and requiring an additional dependency. Its dependency requirements vary slightly by the version of the package. It has some configurations in which it's known not to build successfully. That information is all given to the concretizer, and once a concrete spec is generated, the build instructions are fairly simple.
 
 \subsection{Concretization}
+Concretization is the \spack{} terminology for dependency resolution. It takes \emph{abstract specs} from the user and turns them into \emph{concrete specs} that can be combined with the package files to create actionable install instructions.
+Dependency resolution is a key component of any package manager, but as an HPC package manager the solution space for concretization in \spack{} is larger than in other package managers.
+In addition to package names and versions, \spack{} solves for the compiler and compiler version used, compiler flags, build options (\emph{variants}), target architecture and operating system.
 
 There are three primary inputs to concretization in \spack{}, and we have already discussed two of them. The inputs to the concretization algorithm are the package constraints, the abstract spec input by the user, and the user configuration.
 
@@ -90,32 +95,36 @@ The user configuration allows the user to change the default behaviors of \spack
 
 On a conceptual level, we can think of the concretizer as accomplishing two tasks. It determines the set of packages needed in the spec DAG, and it fills in any missing information about how to build each node in the DAG. For each decision it makes, it first considers the constraints of the build space generated by the package, constrains those further by the abstract spec, and chooses any additional degrees of freedom from the preferences expressed in the user configuration.
 
-Consider our package \texttt{foo} from Section~\ref{subsec:pack-dsl}, we will concretize the abstract spec:
+Consider our package \texttt{expkg} from Section~\ref{subsec:pack-dsl}, we will concretize the abstract spec:
 \begin{minted}[fontsize=\small, bgcolor=bg]{text}
-foo@1.0.0 ^baz@3.1.1
+expkg@1.0.0 ^zlib@1.2.11
 \end{minted}
-We will assume for the moment that neither \texttt{bar} nor \texttt{baz} have any additional dependencies. Then the set of packages and constraints needed for this abstract spec is
+We will assume for the moment that neither \texttt{zlib} nor \texttt{bzip2} have any additional dependencies. Then the set of packages and constraints needed for this abstract spec is
 
 \begin{itemize}
-\item \texttt{foo@1.0.0} constraint from the abstract spec \\
-\item \texttt{bar@2.0:} constraint from foo package file \\
-\item \texttt{baz@3.1.1} constraint from abstract spec \\
+\item \texttt{expkg@1.0.0} constraint from the abstract spec \\
+\item \texttt{bzip2@1.0.7:} constraint from expkg package file \\
+\item \texttt{zlib@1.2.11} constraint from abstract spec \\
 \end{itemize}
 
 None of these nodes are fully concrete, so additional decisions must be made from preferences.
-We will consider only \texttt{foo} since we have its package file, but the same process would apply to \texttt{bar} and \texttt{baz}.
+We will consider only \texttt{expkg} since we have its package file, but the same process would apply to \texttt{zlib} and \texttt{bzip2}.
 
-For \texttt{foo}, the version is already fully constrained.
+For \texttt{expkg}, the version is already fully constrained.
 Barring user configuration, the default compiler in \spack{} is the newest version of \texttt{gcc} available on the system, so the concretizer may choose \texttt{gcc@11.2.0}.
 For architecture options, the default is the current architecture. We will assume the algorithm is running on a linux system running \texttt{centos8} on a \texttt{skylake} CPU.
-Our package file for \texttt{foo} specifies the default value for the variant \texttt{bar} is True, so the concretizer chooses that value in the absence of user configuration to the contrary.
+Our package file for \texttt{expkg} specifies the default value for the variant \texttt{bzip} is True, so the concretizer chooses that value in the absence of user configuration to the contrary.
 This creates a feedback loop with the list of nodes, increasing the complexity of the algorithm.
 The concrete spec generated would be:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{text}
-foo@1.0.0+bar%gcc@11.2.0 arch=linux-centos8-skylake
-  ^bar@2.0.0 ...
-  ^baz@3.1.1 ...
+expkg@1.0.0+bzip%gcc@11.2.0 arch=linux-centos8-skylake
+  ^bzip2@1.0.8 ...
+  ^zlib@1.2.11 ...
 \end{minted}
 
 Where the elided values are the details of the dependency packages we did not consider for this exercise.
+
+Early versions of \spack{} used a custom greedy fixed-point algorithm for concretization.
+That algorithm was not complete, and did not implement sufficient backtracking to resolve all theoretically solvable abstract specs.
+For this work, we have implemented a new, complete concretizer for \spack{} by using Answer Set Programming and Clingo.

@@ -50,7 +50,7 @@ if core:
 This algorithm can be very slow.
 Iterative solves are not as expensive as the initial solve, potentially by an order of magnitute, but core sizes can be very large
 
-Using a naive approach in which every fact from the program is an assumption in clingo, simple \spack problems like concretizing ``hwloc'' can generate cores with over 30,000 elements.
+Using a naive approach in which every fact from the program is an assumption in clingo, simple \spack{} problems like concretizing ``hwloc'' can generate cores with over 30,000 elements.
 In one case we tested, over 30,000 elements were generated for a core when the subset-minimal core contained just two elements.
 Minimizing cores of this size is infeasible, with minimization times over 40 minutes for a problem that solves in tens of seconds.
 

@@ -45,9 +45,9 @@ They ensure uniqueness of the prefix by using a hash of the configuration for it
 Functional package managers have not adopted solvers for resolving dependencies, although the space of configurations over which they find resolutions is much larger than that of a single-prefix package manager.
 Their implementation in functional languages and their functional structure require users to create functions for individual configurations.
 Whether because of the unpopularity of functional languages or their lack of a complete solver, functional package managers have not caught on in the HPC space, despite their ability to offer coinstallation.
-A major motivation of \spack was to merge the ease of use of a Portage system with the flexibility displayed by the functional package managers.
+A major motivation of \spack{} was to merge the ease of use of a Portage system with the flexibility displayed by the functional package managers.
 
 Another common package manager in the HPC space is Easybuild~\cite{hoste+:pyhpc12}.
-Like \spack and like the functional package managers, it allows multiple configurations of a package to be installed at once.
+Like \spack{} and like the functional package managers, it allows multiple configurations of a package to be installed at once.
 Like the functional package managers, and unlike \spack, Easybuild has opted to couple dependency resolution tightly with user-provided known configurations.
 This has made Easybuild particularly popular in facility deployments at large supercomputing centers, where facility staff have traditionally maintained the known-good configurations, and can input that knowleadge to Easybuild.
