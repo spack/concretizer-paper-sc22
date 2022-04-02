@@ -1,53 +1,65 @@
 %-------------------------------------------------------------------------------
 \section{Package Managers}
 %-------------------------------------------------------------------------------
-\label{sec:pack-managers}
+\label{sec:package-managers}
 
-The idea of ``sofware release management'' for large numbers of independent packages dates back to a 1997 paper from Ven der Hoek et al.~\cite{van1997software}, and the first package managers for Linux distributions emerged around the same time~\cite{rpm,apt}. Early package managers managed a single-prefix installation of hand-curated packages.
+The idea of ``sofware release management'' for integrated sets of packages dates back to
+a 1997 paper from Ven der Hoek et al.~\cite{van1997software}, and the first Linux
+package managers emerged around the same time~\cite{rpm,apt}. Since then, the number and
+complexity of software packages has grown enormously, as have the use cases for package
+managers.
 
 \subsection{Single-prefix Package Managers}
 
-System package managers such as RPM, Yum, and APT~\cite{foster+:rpm03,silva:apt01,yum} are integrated with most OS distributions, and are used to ensure system software dependencies are installed along with system software.
-These tools focus on managing a single software stack, built with a single compiler, which works well for system software and drivers, which must be common across all software on the system.
-They allow only one version of a package and install everything to a known common location.
+Package managers such as RPM, Yum, and APT~\cite{foster+:rpm03,silva:apt01,yum} are used
+to manage the system packages of most Linux distributions. These tools focus on managing
+one software stack, built with one compiler, which works well for system software and
+drivers that underly all software on the system. They are designed so that software can
+be upgraded in place for bugfixes and security updates. All software goes in to a single
+{\it prefix}, e.g. {\tt /usr}, and for this reason, only one version of any package can
+be installed at a time. Upgrades are prioritized over reproducibility, and users do not
+have great flexibility over precise package versions and configurations.
 
-Portage systems such as Gentoo, BSD Ports, Macports, and Homebrew typically operate in a similar solving space to the binary system package managers previously discussed, although they differ by building packages from source.
-Some portage systems allow multiple versions of a package to be installed simultaneously~\cite{groffen:gentoo-prefix}, but the burden is on the package creator to manage conflicts.
-In practice, this leads to systems that manage a very small subset of possible configurations, prioritizing correctness of known configurations over exploration of the configuration space.
-
-Even this limited space of software management, the version selection problem, was proven to be NP-complete by Di Cosmo et al.~\cite{dicosmo:edos,mancinelli+:ase06-foss-distros}.
-Early work on solving the version selection problem with SAT solvers led to the Mancoosi project, which focused on a modular package manager with interchangeable solvers~\cite{abate2012dependency,abate-2013-modular-package-manager}.
-The Mancoosi project published the Common Upgradeability Description Format (CUDF) as an attempt to standardize the interface between package managers and solvers.
-
-CUDF allowed package managers to experiment with new solver implementations.
-CUDF solvers have used Mixed-Integer Linear Programming, Boolean Optimization, and Answer Set Programming~\cite{michel+:lococo2010,argelich+:lococo2010,gebser+:2011-aspcud}.
-Many modern linux distributions use CUDF-like formats to express upgrade scenarios to the solver~\cite{abate2020dependency}.
+Even in this limited package/version configuration space, dependency solving is
+NP-complete~\cite{dicosmo:edos,mancinelli+:ase06-foss-distros} because any two
+non-overlapping version constraints can cause a conflict. The Common Upgradeability
+Description Format (CUDF) attempts to standardize an interface for external package
+solvers~\cite{abate2012dependency,abate-2013-modular-package-manager} and has enabled
+many encodings of the single-prefix upgrade problem: Mixed-Integer Linear Programming,
+Boolean Optimization, and Answer Set
+Programming~\cite{tucker+:icse07-opium,michel+:lococo2010,argelich+:lococo2010,gebser+:2011-aspcud}.
+Most modern package solvers still use ad-hoc implementations instead of a common
+external solver~\cite{abate2020dependency}.
 
 \subsection{Language Package Managers}
 
-Although the earliest package managers evolved for Linux distributions, modern language implementations often include their own package managers~\cite{npm,pip,cargo,weizenbaum:pubgrub18}.
-The solver requirements for language package managers are different from those in a linux distribution; they typically allow multiple versions of the same package to be installed to match the workflows of the developers who typically use them.
-However, these language package managers still typically solve only for package names and versions, ignoring other factors like compilers and build options that could round out the solution space.
+Most modern language implementations also include their own package
+managers~\cite{npm,pip,cargo,weizenbaum:pubgrub18}. The solver requirements for language
+package managers are different from those in a linux distribution; they typically allow
+multiple versions of the same package to be installed to support developer workflows and
+reproducibility. Conflicts can arise, as most langauge module systems do not support
+{\it linking} multiple versions of one package into a single executable. Javascript is a
+notable exception to this. These language package managers still solve only for package
+names and versions, ignoring compilers, build options, targets and other options that
+expand the solution space. Most language package managers implement their own ad-hoc
+solvers in their own language. Historically these solvers were not complete, as
+implementing a performant SAT solver in all but the lowest-level languages is quite
+difficult. However, there has been a recent trend towards complete
+solvers~\cite{pip-new-resolver,weizenbaum:pubgrub18} as the complexity of language
+ecosystems has grown. These systems do not support optimization beyond selecting recent
+versions~\cite{abate2020dependency}.
 
-Many language package managers do not use complete solvers.
-Solvers are complicated software that is difficult to use, and most programmers are not familiar with solvers and their capabilities.
-Additionally, most language maintainers prefer to write package managers and other community software in the languages they maintain --- since fast, effective solvers are typically written in well-established, compiled languages, modern and interpreted language communities see the solver as an unwanted external dependency for their package manager~\cite{abate2020dependency}.
+\subsection{Functional and HPC Package Managers}
 
-More recently, some language package managers have determined that they need complete solvers for their communities. The Pip package manager for Python, for example, recently adopted a new algorithm to resolve dependencies using a solver~\cite{pip-new-resolver}, and the maintainers of the Dart package manager wrote a custom CDCL SAT solver called PubGrub~\cite{weizenbaum:pubgrub18}.
-Other package managers are moving in this direction as well; the Cargo~\cite{cargo} package manager for Rust is moving towards using PubGrub as well~\cite{pubgrub-rs} by reimplementing the algorithm in Rust.
-
-\subsection{Functional Package Managers and HPC Package Managers}
-
-``Functional'' package managers like Nix~\cite{dolstra+:icfp08,dolstra+:lisa04} and Guix~\cite{courtes-guix-2015} allow users to install arbitrarily many configurations of a given package.
-Like many HPC facilities deployments, they install each configuration to a unique location, but they do not provide human-readable paths for each installation.
-They ensure uniqueness of the prefix by using a hash of the configuration for its install path.
-
-Functional package managers have not adopted solvers for resolving dependencies, although the space of configurations over which they find resolutions is much larger than that of a single-prefix package manager.
-Their implementation in functional languages and their functional structure require users to create functions for individual configurations.
-Whether because of the unpopularity of functional languages or their lack of a complete solver, functional package managers have not caught on in the HPC space, despite their ability to offer coinstallation.
-A major motivation of \spack{} was to merge the ease of use of a Portage system with the flexibility displayed by the functional package managers.
-
-Another common package manager in the HPC space is Easybuild~\cite{hoste+:pyhpc12}.
-Like \spack{} and like the functional package managers, it allows multiple configurations of a package to be installed at once.
-Like the functional package managers, and unlike \spack, Easybuild has opted to couple dependency resolution tightly with user-provided known configurations.
-This has made Easybuild particularly popular in facility deployments at large supercomputing centers, where facility staff have traditionally maintained the known-good configurations, and can input that knowleadge to Easybuild.
+So-called ``functional'' package managers like
+Nix~\cite{dolstra+:icfp08,dolstra+:lisa04} and Guix~\cite{courtes-guix-2015} allow users
+to install arbitrarily many configurations of a given package. Like many HPC
+deployments, they install each configuration to a unique prefix, but instead of a
+human-readable name, they ensure that each installation gets a unique prefix by using a
+hash of the bits of the installation itself. These systems do not use solvers to resolve
+dependencies. Rather, they have very little conditional logic and rely on the specific
+package recipes in a repository. As mentioned, Easybuild~\cite{hoste+:pyhpc12} is
+similar in this regard, as it allows multiple configurations of packages by duplicating
+package recipes and adhering to a strict naming convention to differentiate different
+installations. In all of these systems, users must modify code in package recipes to
+change the way dependencies are resolved.
