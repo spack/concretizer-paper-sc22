@@ -229,3 +229,9 @@ optimality.
 %\texttt{bzip} is True, so the concretizer chooses that value in the absence of user
 %configuration to the contrary. This creates a feedback loop with the list of nodes,
 %increasing the complexity of the algorithm. The concrete spec generated would be:
+
+In addition to these issues, the original concretizer was implemented directly on the
+dependency graph structure in memory. Any new semantics had to be implemented with
+complex graph algorithms, and graph nodes and edges had to be configured and updated
+manually. This process was error-prone and limited the speed of development and the
+complexity of the semanics that could be considered.
