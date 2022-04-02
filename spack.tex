@@ -20,6 +20,7 @@ spec that can be installed. We provide an overview of these pieces here but full
 are in the original paper~\cite{gamblin+:sc15}.
 
 \subsection{Spec Syntax}
+\label{sec:specs}
 
 Spack calls its internal dependency graphs ``specs'' because they specify parameters of
 a software installation along with those of its dependencies. Specs are directed acyclic
@@ -50,7 +51,7 @@ Table~\ref{tab:sigil} shows examples of {\it sigils} that can be used to specify
 specific constraints on specs, including any of the attributes listed above. The spec
 syntax is fully recursive, in that users can specify constraints on dependencies using
 the {\tt \^{}} (``depends on'') sigil. For example, the spec below:
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+\begin{minted}[fontsize=\small]{text}
 hdf5@1.10.2 ^zlib%gcc ^cmake target=aarch64
 \end{minted}
 
@@ -138,59 +139,94 @@ package in Spack, rather there are several {\tt mpi} {\it providers}, like {\tt 
 providers. We thus call {\tt mpi} a``virtual dependency''. {\tt blas} and {\tt lapack}
 are two other common examples in HPC.
 
-In summary, Spack can build {\tt example} in {\it many} different ways. The metadata in
-the package DSL is what allows developers to expose a huge combinatorial build
-configuration space, and it is the {\it concretizer}'s job to select a configuration
-from this space.
-
 \subsection{Concretization}
 
+Spack can build the {\tt example} package in Figure~\ref{fig:example-spack-package} in
+{\it many} different ways. The metadata in the package DSL exposes a combinatorial build
+configuration space, and it is the {\it concretizer}'s job to select a configuration
+from this space. The {\it concretizater} is Spack's dependency solver, so called because
+it converts partially constrained \emph{abstract specs} to fully constrained
+\emph{concrete specs} that can be built when combined with the installation methods in
+the package DSL.
 
-For each virtual
-dependency, even more options arise to complicate the build space as an implementation
-must be selected in addition to all of the decisions necessasary to build that
-implementation.
+There are three primary inputs to concretization in \spack: specs on the command line,
+constraints from the package DSL, and additional preferences from user configuration
+files. Without loss of generality, we will consider only the first two here; user
+configuration adds additional optimization criteria to the solve.
+%
+%The
+%user configuration allows the user to change the default behaviors of \spack, but is not
+%necessary to understand the workings of the concretizer. In the following discussion of
+%the concretizer, in many places the algorithm will ``choose the default'' or ``choose
+%the most preferred ...'' when otherwise unconstrained. In all of those cases, \spack has
+%builtin defaults that can be overriden with user configuration.
+%
+%For each virtual
+%dependency, even more options arise to complicate the build space as an implementation
+%must be selected in addition to all of the decisions necessasary to build that
+%implementation.
+%
+On a conceptual level, we can think of the concretizer as accomplishing two tasks.
+First, it determines the set of packages needed in the spec DAG. Second, it fills in any
+missing nodal parameters (enumerated in Section~\ref{sec:specs}). Every decision made by
+the concretizer must consider constraints from all the input sources; any unsatisifed
+constraints imply an {\it invalid} solution. We say a solution is {\it valid} if and only if:
+\begin{enumerate}
+\item all virtuals are replaced with concrete dependencies;
+\item all dependencies are resolved;
+\item all node parameters have been assigned values; and
+\item all input constraints are satisfied.
+\end{enumerate}
 
-Concretization is the \spack terminology for dependency resolution. It takes \emph{abstract specs} from the user and turns them into \emph{concrete specs} that can be combined with the package files to create actionable install instructions.
-Dependency resolution is a key component of any package manager, but as an HPC package manager the solution space for concretization in \spack is larger than in other package managers.
-In addition to package names and versions, \spack solves for the compiler and compiler version used, compiler flags, build options (\emph{variants}), target architecture and operating system.
-
-There are three primary inputs to concretization in \spack, and we have already discussed two of them. The inputs to the concretization algorithm are the package constraints, the abstract spec input by the user, and the user configuration.
-
-The user configuration allows the user to change the default behaviors of \spack, but is not necessary to understand the workings of the concretizer. In the following discussion of the concretizer, in many places the algorithm will ``choose the default'' or ``choose the most preferred ...'' when otherwise unconstrained. In all of those cases, \spack has builtin defaults that can be overriden with user configuration.
-
-On a conceptual level, we can think of the concretizer as accomplishing two tasks. It determines the set of packages needed in the spec DAG, and it fills in any missing information about how to build each node in the DAG. For each decision it makes, it first considers the constraints of the build space generated by the package, constrains those further by the abstract spec, and chooses any additional degrees of freedom from the preferences expressed in the user configuration.
-
-Consider our package \texttt{example} from Section~\ref{sec:package-dsl}, we will concretize the abstract spec:
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+Consider our package \texttt{example} from Section~\ref{sec:package-dsl}, we will
+concretize the abstract spec:
+\begin{minted}[fontsize=\small]{text}
 example@1.0.0 ^zlib@1.2.11
 \end{minted}
-We will assume for the moment that neither \texttt{zlib} nor \texttt{bzip2} have any additional dependencies. Then the set of packages and constraints needed for this abstract spec is
+We will assume for the moment that neither \texttt{zlib} nor \texttt{bzip2} have any
+additional dependencies. Then the set of packages and constraints needed for this
+abstract spec is
 
 \begin{itemize}
-\item \texttt{example@1.0.0} constraint from the abstract spec \\
-\item \texttt{bzip2@1.0.7:} constraint from example package file \\
-\item \texttt{zlib@1.2.11} constraint from abstract spec \\
+\item {\tt example@1.0.0} constraint from the abstract spec
+\item {\tt bzip2@1.0.7:} constraint from example package file
+\item {\tt zlib@1.2.11} constraint from abstract spec
+\item {\tt mpich} concrete replacement for virtual dependency
 \end{itemize}
 
-None of these nodes are fully concrete, so additional decisions must be made from preferences.
-We will consider only \texttt{example} since we have its package file, but the same process would apply to \texttt{zlib} and \texttt{bzip2}.
+The original concretizer would simply proceed until all decisions had been made,
+stopping at the first conflict it found with any prior decision. If it completed, the
+resulting concrete spec might look like:
 
-For \texttt{example}, the version is already fully constrained.
-Barring user configuration, the default compiler in \spack is the newest version of \texttt{gcc} available on the system, so the concretizer may choose \texttt{gcc@11.2.0}.
-For architecture options, the default is the current architecture. We will assume the algorithm is running on a linux system running \texttt{centos8} on a \texttt{skylake} CPU.
-Our package file for \texttt{example} specifies the default value for the variant \texttt{bzip} is True, so the concretizer chooses that value in the absence of user configuration to the contrary.
-This creates a feedback loop with the list of nodes, increasing the complexity of the algorithm.
-The concrete spec generated would be:
-
-\begin{minted}[fontsize=\small, bgcolor=bg]{text}
+\begin{minted}[fontsize=\small]{text}
 example@1.0.0+bzip%gcc@11.2.0 arch=linux-centos8-skylake
-  ^bzip2@1.0.8 ...
-  ^zlib@1.2.11 ...
+  ^bzip2@1.0.8+pic%gcc@11.2.0 arch=linux-centos8-skylake
+  ^zlib@1.2.11+pic%gcc@11.2.0 arch=linux-centos8-skylake
+  ^mpich@3.1 pmi=pmix %gcc@11.2.0 arch=linux-centos8-skylake
 \end{minted}
 
-Where the elided values are the details of the dependency packages we did not consider for this exercise.
+Here, all dependencies are expanded, all node parameters (variants, compilers, targets,
+etc.) have been bassigned and no constraints are violated.
 
-Early versions of \spack used a custom greedy fixed-point algorithm for concretization.
-That algorithm was not complete, and did not implement sufficient backtracking to resolve all theoretically solvable abstract specs.
-For this work, we have implemented a new, complete concretizer for \spack by using Answer Set Programming and Clingo.
+None of these nodes are fully concrete, so additional decisions must be made from
+preferences. We will consider only \texttt{example} since we have its package file, but
+the same process would apply to \texttt{zlib}, \texttt{bzip2}, and \texttt{mpich}. The
+original Spack concretizer used a greedy, fixed-point algorithm. The issue with this
+algorithm (and all greedy algorithms) is that it only made {\it local} decisions about
+dependencies and node parameters, and it could not backtrack to undo decisions that it
+made. So, for example, the original concretizer might choose version 1.0.7 for {\tt
+  bzip2} here, but if the {\tt mpich} package {\it conflicts} with {\tt bzip2@:1.0.7:}
+(versions of {\tt bzip} up to and including 1.0.7), then concretization may fail even
+though {\tt 1.0.8} would have worked. The solve is thus {\it incomplete}. Similarly,
+because the original concretizer would only make local optimization decisions, it made
+no global guarantees of optimality.
+
+%For \texttt{example}, the version is already fully constrained. Barring user
+%configuration, the default compiler in \spack is the newest version of \texttt{gcc}
+%available on the system, so the concretizer may choose \texttt{gcc@11.2.0}. For
+%architecture options, the default is the current architecture. We will assume the
+%algorithm is running on a linux system running \texttt{centos8} on a \texttt{skylake}
+%CPU. Our package file for \texttt{example} specifies the default value for the variant
+%\texttt{bzip} is True, so the concretizer chooses that value in the absence of user
+%configuration to the contrary. This creates a feedback loop with the list of nodes,
+%increasing the complexity of the algorithm. The concrete spec generated would be:
