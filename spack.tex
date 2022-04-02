@@ -43,7 +43,7 @@ graph has parameters, including:
 The spec syntax in \spack allows users to specify preferences within this combinatorial
 build space. In the simplest case, a user might want to build a particular package {\it
   without} any concern for its configuration. In this case they would write:
-\begin{minted}[fontsize=\small]{text}
+\begin{minted}[fontsize=\small,bgcolor=bg]{text}
 spack install hdf5
 \end{minted}
 Spack will install {\tt hdf5} without any particular customization.
@@ -51,7 +51,7 @@ Table~\ref{tab:sigil} shows examples of {\it sigils} that can be used to specify
 specific constraints on specs, including any of the attributes listed above. The spec
 syntax is fully recursive, in that users can specify constraints on dependencies using
 the {\tt \^{}} (``depends on'') sigil. For example, the spec below:
-\begin{minted}[fontsize=\small]{text}
+\begin{minted}[fontsize=\small,bgcolor=bg]{text}
 hdf5@1.10.2 ^zlib%gcc ^cmake target=aarch64
 \end{minted}
 
@@ -180,7 +180,7 @@ constraints imply an {\it invalid} solution. We say a solution is {\it valid} if
 
 Consider our package \texttt{example} from Section~\ref{sec:package-dsl}, we will
 concretize the abstract spec:
-\begin{minted}[fontsize=\small]{text}
+\begin{minted}[fontsize=\small,bgcolor=bg]{text}
 example@1.0.0 ^zlib@1.2.11
 \end{minted}
 We will assume for the moment that neither \texttt{zlib} nor \texttt{bzip2} have any
@@ -198,7 +198,7 @@ The original concretizer would simply proceed until all decisions had been made,
 stopping at the first conflict it found with any prior decision. If it completed, the
 resulting concrete spec might look like:
 
-\begin{minted}[fontsize=\small]{text}
+\begin{minted}[fontsize=\footnotesize,bgcolor=bg]{text}
 example@1.0.0+bzip%gcc@11.2.0 arch=linux-centos8-skylake
   ^bzip2@1.0.8+pic%gcc@11.2.0 arch=linux-centos8-skylake
   ^zlib@1.2.11+pic%gcc@11.2.0 arch=linux-centos8-skylake
@@ -206,20 +206,19 @@ example@1.0.0+bzip%gcc@11.2.0 arch=linux-centos8-skylake
 \end{minted}
 
 Here, all dependencies are expanded, all node parameters (variants, compilers, targets,
-etc.) have been bassigned and no constraints are violated.
-
-None of these nodes are fully concrete, so additional decisions must be made from
-preferences. We will consider only \texttt{example} since we have its package file, but
-the same process would apply to \texttt{zlib}, \texttt{bzip2}, and \texttt{mpich}. The
-original Spack concretizer used a greedy, fixed-point algorithm. The issue with this
-algorithm (and all greedy algorithms) is that it only made {\it local} decisions about
-dependencies and node parameters, and it could not backtrack to undo decisions that it
-made. So, for example, the original concretizer might choose version 1.0.7 for {\tt
-  bzip2} here, but if the {\tt mpich} package {\it conflicts} with {\tt bzip2@:1.0.7:}
-(versions of {\tt bzip} up to and including 1.0.7), then concretization may fail even
-though {\tt 1.0.8} would have worked. The solve is thus {\it incomplete}. Similarly,
-because the original concretizer would only make local optimization decisions, it made
-no global guarantees of optimality.
+etc.) have been bassigned and no constraints are violated. None of these nodes are fully
+concrete, so additional decisions must be made from preferences. We will consider only
+\texttt{example} since we have its package file, but the same process would apply to
+\texttt{zlib}, \texttt{bzip2}, and \texttt{mpich}. The original Spack concretizer used a
+greedy, fixed-point algorithm. The issue with this algorithm (and all greedy algorithms)
+is that it only made {\it local} decisions about dependencies and node parameters, and
+it could not backtrack to undo decisions that it made. So, for example, the original
+concretizer might choose version 1.0.7 for {\tt bzip2} here, but if the {\tt mpich}
+package {\it conflicts} with {\tt bzip2@:1.0.7:} (versions of {\tt bzip} up to and
+including 1.0.7), then concretization may fail even though {\tt 1.0.8} would have
+worked. The solve is thus {\it incomplete}. Similarly, because the original concretizer
+would only make local optimization decisions, it made no global guarantees of
+optimality.
 
 %For \texttt{example}, the version is already fully constrained. Barring user
 %configuration, the default compiler in \spack is the newest version of \texttt{gcc}
