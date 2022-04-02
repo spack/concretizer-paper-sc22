@@ -3,33 +3,111 @@
 %-------------------------------------------------------------------------------
 \label{sec:intro}
 
-Managing dependencies for scientific software has been notoriously difficult for
-years~\cite{hoste+:pyhpc12,gamblin+:sc15,dubois2003johnny,hochstein+:2011-build}.
-Scientific software is typically built from source to achieve the best performance, and
-configuring build systems to target speicfic machines, dependency versions, and
-compilers requires painstaking care if done manually. In the early 2010's, two main
-package managers emerged to tackle this problem for the HPC space:
-Spack~\cite{gamblin+:sc15} and EasyBuild~\cite{hoste+:pyhpc12}.
 
+%\begin{figure}
+%  \centering
+%  \includegraphics[width=.8\columnwidth]{figures/warpx.pdf}
+%  \caption{ Dependencies of WarpX (built with AMD ROCm GPU support
+%    enabled). E4S packages are shown in red.
+%    \label{fig:warpx}
+%  }
+%\end{figure}
 
-\cite{}
+%% \begin{figure}
+%%   \centering
+%%   \includegraphics[width=\columnwidth]{figures/e4s.pdf}
+%%   \caption{
+%%     All packages in E4S 21.11 (red) and their dependencies (blue).
+%%     E4S 21.11 (the current release) is deployed using a Spack environment containing roughly 100 ro\
+%% ot specs,
+%%     which equates to the installation of as many as 500 Spack packages to complete the
+%%     installation. The precise number of packages required for a deployment of E4S
+%%     is system-specific as they need the underlying hardware (e.g., NVIDIA, AMD GPUs).
+%%     The total number of packages deployed also depends on the use of facility-managed packages that\
+%%  are already installed on the system, as these may be
+%%     re-used with Spack as externals in the custom E4S Spack environment.
+%%     \label{fig:e4s-graph}
+%%   }
+%% \end{figure}
 
-E4S is ~100 packages and 400 dependencies
-many conditional dependencies
-many version constraints
-many optionally enabled packages
-many virtual packages
+Managing dependencies for scientific software is notoriously
+difficult~\cite{hoste+:pyhpc12,gamblin+:sc15,dubois2003johnny,hochstein+:2011-build}.
+Scientific software is typically built from source to achieve good performance, and
+configuring build systems, dependency versions, and compilers requires painstaking care.
+In the past decade, the modularity of HPC software has exploded. Modularity has well
+known benefits such as separation of concerns, encapsulation, and code reuse. These
+benefits enable application codes to leverage fast math
+libraries~\cite{hypre,mfem,petsc,trilinos} and GPU performance portability frameworks
+like RAJA~\cite{raja} and Kokkos~\cite{kokkos}. However, the cost of software modularity
+is integration complexity: the consumer of components must ensure that compatible
+versions, build options, and other parameters are chosen to ensure that all integrated
+components work together.
 
+{\it Package managers} emerged in the mid-1990's to mitigate the complexity of
+integrating software packages in Linux distributions. In the past decade, their use has
+exploded, particularly within newer language ecosystems like Python~\cite{pip},
+Javascript~\cite{npm}, and Rust~\cite{cargo}, but also within the HPC community. The
+HPC-centric package managers Spack~\cite{gamblin+:sc15} and
+EasyBuild~\cite{hoste+:pyhpc12} are now in wide use for software deployment at HPC
+centers, and by developers and users installing their own copies of software. Indeed,
+the U.S. Exascale Computing Project (ECP) has adopted Spack as the distribution tool for
+its E4S~\cite{e4s} software stack, which contains around 100 packages with around 400
+total dependencies.
 
+Package managers address the integration problem in two main ways. Systems like
+EasyBuild rely on human effort. Maintainers develop fixed package configurations that
+define a common stack, which is shared among users. To deviate from the common stack,
+users must ensure that versions and other parameters are updated across all
+configuration files. Most mainstream package managers, including Spack, provide greater
+flexibility for the end user by incorporating {\it dependency solvers} at their core.
+Users can request arbitrary versions and configurations, and package recipes declare
+{\it constraints} that bound the space of compatible configurations. The solver's job is
+to select a set of versions and configuration parameters that satisfy the user's
+requirements and package constraints.
 
+Dependency solving is NP-complete, even for a ``simple'' configuration space with only
+packages and versions~\cite{dicosmo:edos,cox:version-sat}. Here, we focus on Spack's
+dependency solver, known as the {\it concretizer}, which adds build options (variants),
+compilers, target microarchitectures, and dependency versions to make the space even
+larger. Most package managers use their own ad-hoc solver~\cite{abate2020dependency},
+and Spack is no different; it has historically used its own {\it greedy} algorithm.
+Heuristics were sufficient when there were only 245 packages~\cite{gamblin+:sc15}, but
+now, Spack's mainline repository contains over 6,000 packages, each with many
+constraints and options, and the original concretizer has begun to show its age. In
+particular, it lacks:
+\begin{itemize}
+\item {\it Completeness}: in a growing number of cases, it may not find a solution even
+  though one exists; and
+\item {\it Optimality}: it provides no hard guarantees that it has found the ``best''
+  solution with regard to any criteria.
+\end{itemize}
 
-
-
-Our contributions are:
+An increasing number of package managers use boolean satisfiability (SAT) solvers to
+resolve dependency constraints~\cite{abate2020dependency}, which works well for version
+solving with a single optimization objective. With its added dimensions, Spack's solver
+encodes a much larger configuration space {\it and} requires multi-objective
+optimization. Encoding these semantics in pure SAT is {\it extremely} complex. Instead,
+we have turned to Answer Set Programming
+(ASP)~\cite{gebser+:asp-book,marek+:asp-origins}, a declarative model that allows us to
+encode dependency semantics in a first-order, Prolog-like syntax. ASP solvers reduce
+first-order logic programs to SAT with optimization, and they guarantee both complete
+and optimal solutions. Unlike Prolog, they are also guaranteed to terminate. ASP
+encodings are non-trivial, and this paper presents the first dependency solver capable
+of making strong make guarantees for the generality of HPC dependency semantics.
+Specifically, our contributions are:
 
 \begin{enumerate}
-\item A general mapping of HPC dependency compatibility semantics and optimization rules to ASP;
-\item A technique to optimize for reuse of existing builds in combinatorial package solves;
-\item An implementation of ASP solver in {\it Spack}, a popular HPC package manager; and
-\item An evaluation of our system's performance on large, real-world HPC package repositories.
+\item A general mapping of Spack's DSL, compatibility semantics, and optimization rules
+  to ASP;
+\item A technique to optimize for reuse of existing builds in combinatorial package
+  solves;
+\item An ASP solver implementation in Spack that enables {\it complete} and {\it
+  optimal} solutions; and
+\item An evaluation of our system's performance on the E4S repository with tens of
+  thousands of packages.
 \end{enumerate}
+
+Together, these contributions allow us to replace Spack's original concretizer with a
+complete, optimizing solver, written in around 800 lines of declarative ASP. This
+represents a leap forward in both capability, maintainability, and extensibility to the
+ever-increasing complexity of HPC software.
