@@ -34,36 +34,33 @@ Managing dependencies for scientific software is notoriously
 difficult~\cite{hoste+:pyhpc12,gamblin+:sc15,dubois2003johnny,hochstein+:2011-build}.
 Scientific software is typically built from source to achieve good performance, and
 configuring build systems, dependency versions, and compilers requires painstaking care.
-In the past decade, the modularity of HPC software has exploded. Modularity has well
-known benefits such as separation of concerns, encapsulation, and code reuse. These
-benefits enable application codes to leverage fast math
-libraries~\cite{hypre,mfem,petsc,trilinos} and GPU performance portability frameworks
-like RAJA~\cite{raja} and Kokkos~\cite{kokkos}. However, the cost of software modularity
-is integration complexity: the consumer of components must ensure that compatible
-versions, build options, and other parameters are chosen to ensure that all integrated
-components work together.
+In the past decade, the modularity of HPC software has increased due to well known
+benefits such as separation of concerns, encapsulation, and code reuse. These enable
+application codes to leverage fast math libraries~\cite{hypre,mfem,petsc,trilinos} and
+GPU performance portability frameworks like RAJA~\cite{raja} and Kokkos~\cite{kokkos}.
+However, the cost of modularity is integration complexity: consumers of components must
+ensure that versions and parameters are chosen to ensure that all integrated components
+work together.
 
 {\it Package managers} emerged in the mid-1990's to mitigate the complexity of
 integrating software packages in Linux distributions. In the past decade, their use has
-exploded, particularly within newer language ecosystems like Python~\cite{pip},
+exploded, particularly within language ecosystems like Python~\cite{pip},
 Javascript~\cite{npm}, and Rust~\cite{cargo}, but also within the HPC community. The
 HPC-centric package managers Spack~\cite{gamblin+:sc15} and
-EasyBuild~\cite{hoste+:pyhpc12} are now in wide use for software deployment at HPC
-centers, and by developers and users installing their own copies of software. Indeed,
-the U.S. Exascale Computing Project (ECP) has adopted Spack as the distribution tool for
-its E4S~\cite{e4s} software stack, which contains around 100 packages with around 400
-total dependencies.
+EasyBuild~\cite{hoste+:pyhpc12} are now widely used for software deployment at HPC
+centers, and by developers and users installing their own software. The U.S. Exascale
+Computing Project (ECP) has adopted Spack as the distribution tool for its
+E4S~\cite{e4s} software stack, which contains 100 packages with 400 dependencies.
 
 Package managers address the integration problem in two main ways. Systems like
-EasyBuild rely on human effort. Maintainers develop fixed package configurations that
-define a common stack, which is shared among users. To deviate from the common stack,
-users must ensure that versions and other parameters are updated across all
-configuration files. Most mainstream package managers, including Spack, provide greater
-flexibility for the end user by incorporating {\it dependency solvers} at their core.
-Users can request arbitrary versions and configurations, and package recipes declare
-{\it constraints} that bound the space of compatible configurations. The solver's job is
-to select a set of versions and configuration parameters that satisfy the user's
-requirements and package constraints.
+EasyBuild rely on human effort, where maintainers develop fixed package configurations
+that define a common stack, which is shared among users. To deviate from the stack,
+users must update all configuration files to ensure that versions and other parameters
+are consistent. More commonly, package managers like Spack provide flexibility for the
+end user by incorporating {\it dependency solvers} at their core. Users can request
+arbitrary versions, and packages declare {\it constraints} that bound the space of
+compatible configurations. The solver selects a set of versions and configuration
+parameters that satisfy the user's requirements and package constraints.
 
 Dependency solving is NP-complete, even for a ``simple'' configuration space with only
 packages and versions~\cite{dicosmo:edos,cox:version-sat}. Here, we focus on Spack's
