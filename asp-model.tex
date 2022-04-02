@@ -3,18 +3,16 @@
 %-------------------------------------------------------------------------------
 \label{sec:asp-model}
 
-At a high-level, with the introduction of \clingo, each concretization
+At a high-level, with the introduction of \clingo, our concretization
 combines:
 \begin{enumerate}
 \item A large number of \emph{facts} characterizing the specific problem being solved
 \item A small \emph{logic program} encoding the rules and constraints of the software model
 \end{enumerate}
-The facts are always generated starting from one or more
-\emph{root specs} that need to be concretized, and they account
-for both the metadata contained in package recipes and the
-current state of \spack{} in terms of configuration and
-installed software.
-For instance, a simple directive such as:
+The facts are always generated starting from one or more \emph{root specs} that need to
+be concretized, and they account for both the metadata contained in the package recipes
+of all possible dependencies, as well as the current state of \spack{} in terms of
+configuration and installed software. For instance, a simple directive such as:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 version('1.2.11', sha256='ah45rstgef...')
@@ -23,10 +21,11 @@ version('1.2.11', sha256='ah45rstgef...')
 in \texttt{zlib}'s recipe is translated to the following fact:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
-version_declared("zlib", "1.2.11", 0, "package_py").
+version_declared("zlib", "1.2.11", 0).
 \end{minted}
 
-in our ASP solve. Similarly, the request to concretize
+where {\tt 0} is the preference weight of this version. Similarly, the request to
+concretize
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 zlib@1.2.11
@@ -45,13 +44,10 @@ a version requirement.
 A typical solve has around $10k-100k$ facts which include
 the encoding of dependencies, variants, preferences, etc.
 
-The logic program encodes the software model used by \spack{}
-and is solely composed by first-order rules, integrity
-constraints and optimization objectives.
-The declarative nature of ASP makes it easy to enforce
-certain properties on the optimal solution. For instance,
-these three lines ensure that we never have a cyclic dependency
-in a DAG:
+The logic program encodes the software model used by \spack{} and only contains
+first-order rules, integrity constraints, and optimization objectives. The declarative
+nature of ASP makes it easy to enforce certain properties on the optimal solution. For
+instance, these three lines ensure that we never have a cyclic dependency in a DAG:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 path(A, B) :- depends_on(A, B).
@@ -69,15 +65,14 @@ a path from \texttt{A} to \texttt{C}. The final line is an
 to \texttt{B} and paths from \texttt{B} to \texttt{A} cannot
 occur at the same time in a valid solution.
 
-To give a rough idea of the compactness and expressiveness of
-the ASP encoding, the entire logic program for the software
-model described in Section~\ref{sec:software-model} is around
-$500$ lines of code. The concretization process is straightforward
-to follow conceptually within \spack:
+To give a rough idea of the compactness and expressiveness of the ASP encoding, the
+entire logic program for the software model described here is around $800$ lines. The
+concretization process is straightforward to follow conceptually within \spack:
 \begin{enumerate}
-\item Facts are generated for the current concretization \footnotemark
-\item The logic program and the facts are sent to the solver
-\item The concretized DAG is rebuilt from the \emph{optimal} result
+\item Generate facts for all possible dependencies/installs \footnotemark;
+\item Send logic program and facts to the solver;
+\item Retrieve the best stable model; and
+\item Build an {\it optimal} concrete DAG from the model.
 \end{enumerate}
 \footnotetext{It's worth stressing that the logic program changes only
 when the underlying software model changes, as opposed
@@ -88,10 +83,14 @@ constraints fully determine if a solution is valid, we need
 optimization targets to select one of the many possible solutions
 in a way that fits user's expectations.
 
-A good example to illustrate this point is target selection for DAG nodes.
-In \spack{} each node being built has a target microarchitecture associated with it, and we want to use the best target possible while respecting the constraints coming from the compiler (some compilers don't support generating code for some targets) and from the configuration.
-Previously this required some complicated logic mixed with the rest of the solve.
-The introduction of \clingo{} simplified the problem definition by a great amount. A cardinality constraint is used to express that each node must have one and only one target:
+A good example to illustrate this point is target selection for DAG nodes. In \spack{}
+each node being built has a target microarchitecture associated with it, and we want to
+use the best target possible while respecting the constraints coming from the compiler
+(for example, {\tt gcc@4.8.3} cannot generate optimized instructions for {\tt skylake}
+processors). Previously this required some complicated logic mixed with the rest of the
+solve. The introduction of \clingo{} greatly simplified the problem definition. A
+cardinality constraint is used to express that each node must have one and only one
+target:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 1 { node_target(Package, Target) :
@@ -113,8 +112,9 @@ An integrity constraints prevents choosing a target not supported by the current
    node_compiler_version(P, C, V).
 \end{minted}
 
-These three statements fully describe the characteristics of a valid solution. To pick the \emph{optimal} solution we also \emph{weight} the possible targets
-(the lower the weight, the best the target) and optimize over the sum of target weights:
+These three statements fully describe the characteristics of a valid solution. To pick
+the \emph{optimal} solution we also \emph{weight} the possible targets (the lower the
+weight, the best the target) and optimize over the sum of target weights:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 node_target_weight(P, W) :-
@@ -124,11 +124,16 @@ node_target_weight(P, W) :-
 
 \subsection{Generalized Condition Handling}
 \label{subsec:generalizedcond}
-A peculiar feature of \spack, as a package manager, is that it doesn't only optimize for versions but for many other aspects of the build as well e.g. which compiler to use, which microarchitecture to target, etc.
-The DSL used for package recipes reflects this complexity by having multiple directives to declare different properties or constraints for each software, as seen in Section~\ref{sec:software-model}.
+A unique feature of \spack, as a package manager, is that it doesn't only optimize for
+versions but for many other aspects of the build as well e.g. which compiler to use,
+which microarchitecture to target, etc. The DSL used for package recipes reflects this
+complexity by having multiple directives to declare different properties or constraints
+for each software, as seen in Section~\ref{sec:software-model}.
 
-One interesting abstraction, that we observed while coding the ASP logic program, is that each of these directives can be seen as a way to impose additional constraints on the solution, conditional on other constraints
-being met. For instance, the following directive in a package:
+One interesting abstraction, that we observed while coding the ASP logic program, is
+that each of these directives can be seen as a way to impose additional constraints on
+the solution, conditional on other constraints being met. For instance, the following
+directive in a package:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 depends_on('hdf5+mpi', when='+mpi')
@@ -188,9 +193,16 @@ attr(N, A1) :-
 enforce the imposed constraints when a condition holds.
 
 \subsection{Usability Improvements due to \clingo}
-Before the adoption of \clingo, concretization in \spack{} was performed relying on a greedy algorithm with limited backtracking capabilities. This algorithm ensured only that solutions found are valid and conforming to user's request, but it might have failed to find one of those valid solutions if backtracking was necessary to reach that result. Said otherwise, the old algorithm was subject to outputing many \emph{false negatives} \textemdash{} cases where \spack{} would error even though a valid solution exists.
+As mentioned, the original concretizer was incomplete and could fail to find a solution
+when one exists. Users would work around such false negatives by overconstraining
+problematic specs, to help the solver find the right answer. This could become very
+tedious.
 
-A workaround for this limitation consisted in overconstraining problematic specs, so to make backtracking unnecessary. The drawback was an increased need for boilerplate code, which became particularly evident in large production environments and complex scientific software. With the adoption of \clingo{} overspecification is not needed anymore and \emph{false negatives} have been effectively eliminated from concretization.
+%The drawback was increased
+%need for boilerplate code, which became particularly evident in large production
+%environments and complex scientific software. With the adoption of \clingo{}
+%overspecification is not needed anymore and \emph{false negatives} have been effectively
+%eliminated from concretization.
 
 \subsubsection{Conditional Dependencies}
 A prominent example of this behavior is with packages having dependencies conditional to a variant being set to a non-default value. Let's take for instance \texttt{hpctoolkit}, which has the following directives:
@@ -201,7 +213,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
 \end{minted}
 
-Trying to use the old algorithm to concretize \texttt{hpctoolkit \^{}mpich} fails like shown next:
+Trying to use the old algorithm to concretize \texttt{hpctoolkit \^{}mpich} fails like this:
 
 \begin{minted}[fontsize=\footnotesize, bgcolor=bg]{console}
 % spack spec hpctoolkit ^mpich
@@ -215,22 +227,38 @@ Concretized
 ==> Error: Package hpctoolkit does not depend on mpich
 \end{minted}
 
-since the greedy algorithm would set variant values before descending to dependencies. Since no value is specified for the \texttt{mpi} variant, the value chosen is \texttt{false} (the variant default) which leads to \texttt{hpctoolkit} having no dependency on \texttt{mpi}. The workaround required users to write the redundant spec \texttt{hpctoolkit+mpi \^{}mpich} to be able to concretize succesfully. With \clingo{} the overspecification is not needed anymore and the value of the \texttt{mpi} variant is correctly deduced from the user's request to have \texttt{mpich} in the graph, as shown
-in Figure~\ref{fig:hpctoolkit}.
+since the greedy algorithm would set variant values before descending to dependencies.
+Since no value is specified for the \texttt{mpi} variant, the value chosen is
+\texttt{false} (the default) which leads to \texttt{hpctoolkit} having no dependency on
+\texttt{mpi}. The workaround required users to understand the conditional dependency and
+write \texttt{hpctoolkit+mpi \^{}mpich} to concretize succesfully. With \clingo{}, the
+concretizer simply {\it finds} the correct value for the \texttt{mpi} variant, as
+setting it is the only way for {\tt mpich} to be part of the solution.
+
+%, as shown in Figure~\ref{fig:hpctoolkit}.
 
 % FIXME: Figure is too small, what should we do about that? Remove it? Show only part?
-\begin{figure}[h]
-\includegraphics[width=\columnwidth]{figures/hpctoolkit_concretized.pdf}
-\caption{\texttt{hpctoolkit \^{}mpich} as concretized on an Ubuntu 20.04 OS using system compilers}
-\label{fig:hpctoolkit}
-\end{figure}
+%\begin{figure}[h]
+%\includegraphics[width=\columnwidth]{figures/hpctoolkit_concretized.pdf}
+%\caption{\texttt{hpctoolkit \^{}mpich} as concretized on an Ubuntu 20.04 OS using system compilers}
+%\label{fig:hpctoolkit}
+%\end{figure}
 
 \subsubsection{Conflicts in Packages}
-Before using \clingo{} conflicts in packages were only used to \emph{validate} a solution computed by the greedy-algorithm. If the solution matched any conflict, \spack{} would have errored and hinted the user on how to overconstrain the initial spec to help concretization. With clingo instead conflicts are fully taken into account during the solve\footnotemark{} and \spack{} can succesfully find solutions without asking the user to be more specific.
-\footnotetext{With \clingo{} conflicts are treated as shown in Section~\ref{subsec:generalizedcond} and, by imposing \emph{integrity constraints} on the problem, they effectively prevent portions of the search space from being explored}
+Before using \clingo{}, conflicts in packages were only used to \emph{validate} a
+solution computed by the greedy-algorithm. If the solution matched any conflict,
+\spack{} would have errored and hinted the user on how to overconstrain the initial spec
+to help concretization. With ASP, conflicts are generalized as constraints during the
+solve\footnotemark{} and \spack{} no longer needs to ask the user to be more specific.
+\footnotetext{With \clingo{} conflicts are treated as shown in
+  Section~\ref{subsec:generalizedcond} and, by imposing \emph{integrity constraints} on
+  the problem, they effectively prevent portions of the search space from being
+  explored}
 
 \subsubsection{Specialization on Providers of Virtual Packages}
-Using \clingo{} also enabled more complex use cases e.g. imposing constraints on specific virtual package providers. A simple example of that is given by the \texttt{berkeleygw} package, which has the following directives:
+Using \clingo{} also enabled more complex use cases e.g. imposing constraints on
+specific virtual package providers. A simple example of that is given by the
+\texttt{berkeleygw} package, which has the following directives:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 class Berkeleygw(MakefilePackage):
@@ -240,4 +268,8 @@ class Berkeleygw(MakefilePackage):
                when='+openmp ^openblas')
 \end{minted}
 
-The last directive forces \texttt{openblas} to have \texttt{openmp} support if \texttt{berkeleygw} has \texttt{openmp} support and \texttt{openblas} has been chosen as a provider for the mandatory \texttt{lapack} virtual dependency. Conditional constraints of that complexity could not be expressed before, due to the limitations of the previous greedy algorithm.
+The last directive forces \texttt{openblas} to have \texttt{openmp} support if
+\texttt{berkeleygw} has \texttt{openmp} support and \texttt{openblas} has been chosen as
+a provider for the mandatory \texttt{lapack} virtual dependency. Conditional constraints
+of that complexity could not be expressed before, because the solver would select
+defaults for {\tt openblas} before evaluating the conditional constraint on it.
