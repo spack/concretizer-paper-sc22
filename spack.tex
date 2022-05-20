@@ -24,7 +24,7 @@ are in the original paper~\cite{gamblin+:sc15}.
 
 Spack calls its internal dependency graphs ``specs'' because they specify parameters of
 a software installation along with those of its dependencies. Specs are directed acyclic
-graphs where nodes are packages and edges are dependency relationsihps. The ``spec
+graphs where nodes are packages and edges are dependency relationships. The ``spec
 syntax'' is a shorthand for expressing constraints on these graphs. Each node of the
 graph has parameters, including
 \begin{enumerate*}
@@ -128,7 +128,7 @@ for this paper are the metadata directives on lines 6-24. This package has two p
 versions, {\tt 1.0.0} and {\tt 1.1.0}. It has one build option, or ``variant'', called
 {\tt bzip} that enables the dependency on {\tt bzip2}. Its dependency on {\tt zlib} is
 dependent on its version. Conditions like these are specified using {\tt when} clauses
-within directives. It has some {\tt conflicts} for which it is known not to build
+within directives. It has some {\tt conflicts}---conditions under which it is known not to build
 successfully. Dependency constraints, conflicts, and {\tt when} clauses are all
 specified concisely using the  spec syntax.
 %

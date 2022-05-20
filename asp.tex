@@ -5,7 +5,7 @@
 
 The concretization problem is essentially a combinatorial search problem. While many
 package managers use homegrown SAT solvers for this type of problem, encoding the
-complexity of our domain in pure boolean SAT would be extrmely tedious. To manage the
+complexity of our domain in pure boolean SAT would be extremely tedious. To manage the
 complexity, we leverage Answer Set Programming (ASP), a form of declarative programming
 that allows us to formally specify our semantics in first-order logic with variables and
 quantification, in addition to boolean operators. The input language for ASP is similar
@@ -35,14 +35,14 @@ as ``{\tt optimize\_for\_reuse} is enabled. A node called {\tt hdf5} exists. {\t
 
 In addition to facts, ASP programs contain rules, which can derive additional facts. An
 ASP rule has a {\it head} and a {\it body}, separated by \texttt{:-}. The \texttt{:-}
-can be read as ``if'' --- the head (left side) is true if the body (right side) is true.
+can be read as ``if'' --- the head (left side) is true {\it if} the body (right side) is true.
 Terms in the body of a rule can also be preceded by the keyword ``not'' to imply the
 head based on their negation. Logical ``and'' is represented by a comma in the rule
 body, and ``or'' is represented by repeating the head with a different rule body.
 
-ASP progrmas can contain variables, represented by capitalized words. Variables are
+ASP programs can contain variables, represented by capitalized words. Variables are
 scoped to the rule or fact in which they appear; the variable {\tt Package} may be used
-in unrelated rules without any scoping issues Rules are instantiated with all possible
+in unrelated rules without any scoping issues. Rules are instantiated with all possible
 substitutions for variables. For example:
 
 %Additionally, variables appearing in the
@@ -61,7 +61,7 @@ substitutions for variables. For example:
 The rule here translates roughly to ``If a package is in the graph and it depends on
 another package, that package must be in the graph'', and the rule in the program above
 will derive the fact {\tt node("mpi")} when it is instantiated with {\tt
-  node("hdf5")} and {\tt depends\_on("hdf5", "mpi")}. This is the essenence of how
+  node("hdf5")} and {\tt depends\_on("hdf5", "mpi")}. This is the essence of how
   we model dependencies in ASP.
 
 Two additional types of rules are important to understand the power of ASP:
