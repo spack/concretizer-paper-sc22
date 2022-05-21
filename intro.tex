@@ -75,8 +75,8 @@ particular, it lacks:
 \begin{itemize}
 \item {\it Completeness}: in a growing number of cases, it may not find a solution even
   though one exists; and
-\item {\it Optimality}: it provides no hard guarantees that it has found the ``best''
-  solution with regard to any criteria.
+\item {\it Optimality}: it provides no guarantees that it has found the ``best''
+  of all valid solutions according to any criteria.
 \end{itemize}
 
 An increasing number of package managers use boolean satisfiability (SAT) solvers to
@@ -87,10 +87,10 @@ optimization. Encoding these semantics in pure SAT is {\it extremely} complex. I
 we have turned to Answer Set Programming
 (ASP)~\cite{gebser+:asp-book,marek+:asp-origins}, a declarative model that allows us to
 encode dependency semantics in a first-order, Prolog-like syntax. ASP solvers reduce
-first-order logic programs to SAT with optimization, and they guarantee both complete
+first-order logic programs to SAT and optimization, and they guarantee both complete
 and optimal solutions. Unlike Prolog, they are also guaranteed to terminate. ASP
 encodings are non-trivial, and this paper presents the first dependency solver capable
-of making strong make guarantees for the generality of HPC dependency semantics.
+of making strong guarantees for the full generality of HPC dependency semantics.
 Specifically, our contributions are:
 
 \begin{enumerate}
