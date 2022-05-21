@@ -7,11 +7,13 @@ While \spack{} is primarily a package manager installing software \emph{from sou
 the ability to reuse already built software and mix it seamlessly with source builds has
 been a critical request from the community for several years.
 
-\begin{figure}[htb]
+\begin{figure}[t]
   \centering
-  \includegraphics[width=.8\columnwidth]{figures/hash-cache.pdf}
-  \caption{Hash-based reuse in the original \spack concretizer}
-  \label{fig:hash_reuse}
+  \includegraphics[width=\columnwidth]{figures/hash-cache.pdf}
+  \caption{
+    Hash-based reuse in the original \spack concretizer.
+    \label{fig:hash_reuse}
+  }
 \end{figure}
 
 Functional packaging systems, including \spack{} with the old concretizer, reuse builds
@@ -21,7 +23,7 @@ Figure~\ref{fig:hash_reuse}.
 %A user can then query for an exact hash match to reuse
 %something that is either already installed or available as a binary package.
 Unless the user was explicit, \spack{} only reused packages if their hashes matched
-exactly. Small configuration changes easily result in little or no reuse.
+exactly. Small configuration changes could easily result in little or no reuse.
 
 %The issue with this way of proceeding is that users are \emph{effectively
 %overconstraining} their request since specifying the hash is equivalent to specifying

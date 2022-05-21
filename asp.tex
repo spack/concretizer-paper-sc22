@@ -10,9 +10,10 @@ complexity, we leverage Answer Set Programming (ASP), a form of declarative prog
 that allows us to formally specify our semantics in first-order logic with variables and
 quantification, in addition to boolean operators. The input language for ASP is similar
 to Prolog~\cite{baral_2003}. Unlike Prolog, ASP has no operational semantics and is not
-Turing-complete. Rather, ASP {\it grounds} a first-order logic program to a {\it
-  propositional} (no variables) logic, and reduces the result to SAT with optimization.
-Also unlike Prolog, ASP programs are guaranteed to terminate.
+Turing-complete. Rather, ASP converts first-order logic programs (with quantifiers and
+variables) to {\it propositional} programs (with no variables). It then uses techniques
+borrowed from SAT solvers to find solutions. One major benefit of this approach is that
+unlike Prolog, ASP programs are guaranteed to terminate.
 
 In the remainder of this section, we illustrate how ASP can simplify the specification
 and maintenance of our concretization algorithm while also affording strong guarantees
@@ -31,7 +32,7 @@ The following is a simple program comprised entirely of facts:
 \end{minted}
 
 Note that these functions are not imperative; rather this snippet can be ready roughly
-as ``{\tt optimize\_for\_reuse} is enabled. A node called {\tt hdf5} exists. {\tt hdf5} depends on {\tt mpi} ''.
+as ``{\tt optimize\_for\_reuse} is enabled. A node called {\tt hdf5} exists. {\tt hdf5} depends on {\tt mpi}.''
 
 In addition to facts, ASP programs contain rules, which can derive additional facts. An
 ASP rule has a {\it head} and a {\it body}, separated by \texttt{:-}. The \texttt{:-}
@@ -64,6 +65,8 @@ will derive the fact {\tt node("mpi")} when it is instantiated with {\tt
   node("hdf5")} and {\tt depends\_on("hdf5", "mpi")}. This is the essence of how
   we model dependencies in ASP.
 
+\subsection{Integrity Constraints and Choices}
+
 Two additional types of rules are important to understand the power of ASP:
 \textit{integrity constraints} and \textit{choice rules}.
 %Answer Set Programming gets its name from the set of possible answers which satisfy the constraints of the program.
@@ -81,6 +84,9 @@ by specifying conditions not to allow. In ASP, these are represented by a headle
 \end{minted}
 
 Here our integrity constraint says ``A package cannot depend on itself''.
+
+\subsection{Choice Rules}
+
 Choice rules give the solver freedom to choose from possible options. A choice rule is
 (optionally) constrained on either side to specify the minimum (left) and maximum
 (right) number of choices the solver can select.
@@ -109,6 +115,8 @@ they give the solver options for paths to explore next.
 %allow the solver substantial freedom to create facts, within the specified
 %constraints, that satisfy other constraint of the program or maximize optimization
 %criteria.
+
+\subsection{Optimization}
 
 In addition to constraints on the solution space, ASP allows optimization criteria.
 Optimization criteria allow the solver to return a single answer set from the among all
@@ -155,29 +163,62 @@ makes this much simpler.
 %implementing optimization criteria in boolean logic. In ASP, though, it appears
 %reasonably straightforward and is legible to future maintainers of our code.
 
-\subsection{ASP Solvers}
+\subsection{Grounding and Solving}
 
 ASP solvers search the input program for {\it stable models}, also known as
 \textit{answer sets}. An answer set is a set of true atoms for which every rule in the
 input program is idempotent. It is similar to a fixed point, or the solution to a system
-of (boolean) equations.
-%
-%%ASP solvers utilize a huge variety of
-%methods to find answer sets. We will focus on the structure of the \texttt{clingo}
-%solver that we use in \spack.
-%
-%\paragraph{Clingo}
-%
-In this paper, we use the popular \textit{clingo}~\cite{gebser+:aicomm11} tool. which
-consists of two components: the grounder (\textit{gringo}) and the solver
-(\textit{clasp}). \texttt{clasp} uses a CDCL SAT-like algorithm and can also do
-MaxSAT-style optimizations. \texttt{gringo} ``grounds'' the first-order input problem to
-produce the propositional form accepted by {\tt clasp}.
-%
-While the internals of \textit{clasp} and \textit{gringo} are outside the scope of this
-work, it is important to understand that it guarantees completeness and optimality.
-There are no set of inputs for which \textit{clingo} will return a false negative (claim
-the rules are incompatible if they are not) and solutions returned by
-\textit{clingo} are guaranteed to be optimal.
+of (boolean) equations. When ASP first emerged in the late 1990's, it used own solvers.
+However, the problem domain of ASP is NP-complete, and the 2000's brought great
+advances~\cite{moskewicz2001chaff} in solving the canonical NP-complete problem: Boolean
+satisfiability (SAT). Modern ASP solvers exploit high-performance techniques developed
+in the SAT community~\cite{gebser+:asp-book}.
 
-%% TODO: This could probably use some work here
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=.95\textwidth]{figures/asp-grounding.pdf}
+  \caption{
+    Grounding and solving in Answer Set Programming.
+    \label{fig:ground-solve}
+  }
+\end{figure*}
+
+The ASP input language, with first-order rules and variables, is very expressive, but
+SAT solvers deal with {\it propositional} logic programs that have no variables. A logic
+expression that has no variables is called a {\it ground} term, and {\it grounding} is
+the process of converting a first-order ASP rules to a set of ground rules. We call
+these the ``ground instances'' of the first-order rule.
+
+Figure~\ref{fig:ground-solve} shows the grounding and solving process at a very high
+level. On the left is an ASP program with four facts, one first-order rule, and a choice
+rule that says we must choose at least one of {\tt node(a)} or {\tt node(b)} to be in
+the solution. Grounding this program {\it instantiates} the first-order rule with all
+possible ground atoms that can be substituted into its body. The ground instances are
+built from input {\tt depends\_on()} facts, {\tt node(a)} and {\tt node(b)} from the
+choice rule, as well as {\tt node(c)} and {\tt node(d)}, which appear in the heads of
+ground rules instantiated from {\tt node(a)} and {\tt node(b)}. Note that the ground
+instances are slightly simplified---they omit {\tt depends\_on()} terms because these
+terms are facts in the input, and therefore always true. Grounders perform many such
+optimizations to prune the propositional program and to increase the efficiency of the
+solver.
+
+Propositional logic programs can be solved using techniques similar to the CDCL
+algorithm used in modern SAT solvers~\cite{gebser+:asp-book}. For this program, there
+are two stable models: one with only {\tt node(b)} and {\tt node(d)} (when only {\tt
+  node(b)} is selected by the choice rule) and one with all four nodes (when only {\tt
+  node(a)} or both {\tt node(a)} and {\tt node(b)} are selected). It is easy to see from
+this result how we could read in these lists of nodes and construct graphs from them.
+This how Spack reads solutions in from the solver.
+
+We use the popular {\tt clingo}~\cite{gebser+:aicomm11} system, which includes a
+grounder ({\tt gringo}) and a solver ({\tt clasp}).
+\texttt{clasp} uses a CDCL SAT-like algorithm and can also do MaxSAT-style
+optimizations.
+%\texttt{gringo} ``grounds'' the first-order input problem to produce the
+%propositional form accepted by {\tt clasp}.
+%
+The internals of {\tt clingo} are outside the scope of this paper, but it is important
+to understand that because SAT is effectively an exhaustive combinatorial search, it
+guarantees completeness and optimality. There are no inputs for which {\tt clingo} will
+return a false negative (claim the rules are incompatible if they are not) and solutions
+returned by {\tt clingo} are guaranteed to be optimal, in the sense that
