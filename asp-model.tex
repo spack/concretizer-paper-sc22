@@ -330,3 +330,13 @@ requested. We model preferred compilers, targets, and OS's for non-roots at lowe
 priority than mismatches, so that dependencies inherit these properties from their
 dependents unless set explicitly by the user. All preferred versions, compilers, OS's,
 targets, etc. can be overridden through configuration in Spack.
+
+Spack's optimization criteria are unique among dependency solvers in that many of them
+are simply not modeled by other systems. In a typical Linux distribution like Debian,
+target and toolchain compatibility are not modeled---they are uniform across the DAG. If
+we look at {\tt aspcud}~\cite{gebser+:2011-aspcud}, an ASP solver plugin for Debian's
+package manager, APT, we see that there are around 6 optimization criteria, but they all
+have to do with versions and version preferences. This is many fewer than the 15
+criteria modeled here. {\tt aspcud} and Debian also do not model edges in the graph the
+same way---since the Linux OS model only requires one version of each package, it needs
+only consider whether or not nodes are selected for installation.
