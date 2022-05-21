@@ -38,21 +38,20 @@ A more effective way to approach software reuse can be achieved by leveraging th
 ``Generalized Condition Handling'' logic described in
 Section~\ref{subsec:generalizedcond}. First, all the metadata from installed packages
 can be encoded into facts:
-\begin{minted}[fontsize=\tiny, bgcolor=bg]{prolog}
-installed_hash("zlib","7fatdw6gth5nlfdj4d463rdhrby6qvx3").
-imposed_constraint("7fatdw6gth5nlfdj4d463rdhrby6qvx3","node","zlib").
-imposed_constraint("7fatdw6gth5nlfdj4d463rdhrby6qvx3","version","zlib","1.2.11").
-imposed_constraint("7fatdw6gth5nlfdj4d463rdhrby6qvx3","node_platform","zlib","linux").
-imposed_constraint("7fatdw6gth5nlfdj4d463rdhrby6qvx3","node_os","zlib","ubuntu20.04").
-imposed_constraint("7fatdw6gth5nlfdj4d463rdhrby6qvx3","node_target","zlib","icelake").
+\begin{minted}[fontsize=\footnotesize, bgcolor=bg]{prolog}
+installed_hash("zlib","7fatd...").
+imposed_constraint("7fatd...","node","zlib").
+imposed_constraint("7fatd...","version","zlib","1.2.11").
+imposed_constraint("7fatd...","node_platform","zlib","linux").
+imposed_constraint("7fatd...","node_os","zlib","ubuntu20.04").
+imposed_constraint("7fatd...","node_target","zlib","icelake").
 ...
 \end{minted}
 The encoding is based on \texttt{imposed\_constraint}, but the constraint ID is the
 hash associated with the installed package. To minimize the number of builds from
 source, the solver is allowed to choose a hash to resolve any package:
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
-{ hash(P, Hash) : installed_hash(P, Hash) } 1
- :- node(P).
+{hash(P, Hash) : installed_hash(P, Hash)} 1 :- node(P).
 \end{minted}
 Impose all constraints associated with chosen hashes:
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}

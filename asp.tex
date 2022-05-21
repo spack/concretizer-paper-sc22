@@ -24,13 +24,11 @@ than we can implement ourselves with simple heuristics.
 ASP programs are comprised of ``terms'', which can be boolean atoms or a functions whose
 arguments may also be terms. A term followed by a period ({\tt .}) is called a ``fact''.
 The following is a simple program comprised entirely of facts:
-
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
   optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
 \end{minted}
-
 Note that these functions are not imperative; rather this snippet can be ready roughly
 as ``{\tt optimize\_for\_reuse} is enabled. A node called {\tt hdf5} exists. {\tt hdf5} depends on {\tt mpi}.''
 
@@ -45,12 +43,10 @@ ASP programs can contain variables, represented by capitalized words. Variables 
 scoped to the rule or fact in which they appear; the variable {\tt Package} may be used
 in unrelated rules without any scoping issues. Rules are instantiated with all possible
 substitutions for variables. For example:
-
 %Additionally, variables appearing in the
 %head of a rule must appear in a positive (non-negated) term in the rule body. This is
 %referred to as ``safety'' in ASP, and is essential to ensuring the algorithm will
 %terminate.
-
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
   optimize_for_reuse.
   node("hdf5").
@@ -58,7 +54,6 @@ substitutions for variables. For example:
   node(Dependency) :- node(Package),
                       depends_on(Package, Dependency).
 \end{minted}
-
 The rule here translates roughly to ``If a package is in the graph and it depends on
 another package, that package must be in the graph'', and the rule in the program above
 will derive the fact {\tt node("mpi")} when it is instantiated with {\tt
@@ -72,8 +67,7 @@ Two additional types of rules are important to understand the power of ASP:
 %Answer Set Programming gets its name from the set of possible answers which satisfy the constraints of the program.
 %ASP solvers focus on understanding the constraints on this space.
 Integrity constraints allow the programmer to rule out swathes of the answer set space
-by specifying conditions not to allow. In ASP, these are represented by a headless rule.
-
+by specifying conditions not to allow. In ASP, these are represented by a headless rule:
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
   optimize_for_reuse.
   node("hdf5").
@@ -82,15 +76,13 @@ by specifying conditions not to allow. In ASP, these are represented by a headle
                       depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 \end{minted}
-
-Here our integrity constraint says ``A package cannot depend on itself''.
+This constraint says ``a package cannot depend on itself''.
 
 \subsection{Choice Rules}
 
 Choice rules give the solver freedom to choose from possible options. A choice rule is
 (optionally) constrained on either side to specify the minimum (left) and maximum
 (right) number of choices the solver can select.
-
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
   optimize_for_reuse.
   node("hdf5").
@@ -104,7 +96,6 @@ Choice rules give the solver freedom to choose from possible options. A choice r
   1 { version(P, V) : possible_version(P, V) } 1
     :- node(P).
 \end{minted}
-
 The choice rule on the last line means ``If a package is in the graph, assign it
 exactly one of its possible versions.'' The $\{a:b\}$ syntax here has the same meaning
 as in formal set theory; it denotes the set of all $a$ such that $b$ is true. The
@@ -123,7 +114,6 @@ Optimization criteria allow the solver to return a single answer set from the am
 valid answer sets, and guarantee that the chosen answer set minimizes or maximizes one
 or many criteria. There are often many valid solutions to a dependency resolution query,
 but only the optimal solution is relevant once we find it.
-
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
   optimize_for_reuse.
   node("hdf5").
@@ -142,7 +132,6 @@ but only the optimal solution is relevant once we find it.
     :- possible_version(P, V, Weight).
   #minimize{ W@3,P,V : version_weight(P, V, W)}.
 \end{minted}
-
 This optimization constraint says ``I prefer (at priority 3) solutions that minimize the
 sum of the weights (W) of the package (P) versions (V), for all packages and versions.''
 A detailed discussion of the syntax for optimization is beyond the scope of this paper;
@@ -180,6 +169,7 @@ in the SAT community~\cite{gebser+:asp-book}.
   \caption{
     Grounding and solving in Answer Set Programming.
     \label{fig:ground-solve}
+    \vspace{-1em}
   }
 \end{figure*}
 
@@ -197,28 +187,29 @@ possible ground atoms that can be substituted into its body. The ground instance
 built from input {\tt depends\_on()} facts, {\tt node(a)} and {\tt node(b)} from the
 choice rule, as well as {\tt node(c)} and {\tt node(d)}, which appear in the heads of
 ground rules instantiated from {\tt node(a)} and {\tt node(b)}. Note that the ground
-instances are slightly simplified---they omit {\tt depends\_on()} terms because these
-terms are facts in the input, and therefore always true. Grounders perform many such
-optimizations to prune the propositional program and to increase the efficiency of the
-solver.
+instances are simplified---they omit {\tt depends\_on()} terms because these are facts
+in the input, and therefore always true. Grounders perform many such optimizations to
+prune the propositional program and to make the solver more efficient.
 
-Propositional logic programs can be solved using techniques similar to the CDCL
-algorithm used in modern SAT solvers~\cite{gebser+:asp-book}. For this program, there
-are two stable models: one with only {\tt node(b)} and {\tt node(d)} (when only {\tt
+Propositional logic programs can be reduced to SAT and solved using techniques similar
+to those used in modern SAT solvers~\cite{gebser+:asp-book}. For this program, there are
+two stable models: one with only {\tt node(b)} and {\tt node(d)} (when only {\tt
   node(b)} is selected by the choice rule) and one with all four nodes (when only {\tt
   node(a)} or both {\tt node(a)} and {\tt node(b)} are selected). It is easy to see from
 this result how we could read in these lists of nodes and construct graphs from them.
 This how Spack reads solutions in from the solver.
 
 We use the popular {\tt clingo}~\cite{gebser+:aicomm11} system, which includes a
-grounder ({\tt gringo}) and a solver ({\tt clasp}).
-\texttt{clasp} uses a CDCL SAT-like algorithm and can also do MaxSAT-style
-optimizations.
+grounder ({\tt gringo}) and a solver ({\tt clasp}). The search algorithm used in {\tt
+  clasp} traces its roots to the well known Davis–Putnam–Logemann–Loveland (DPLL)
+algorithm~\cite{dp-sat,dpll-sat}, but uses modern extensions like Conflict-Driven Clause
+Learning (CDCL) for high performance~\cite{moskewicz2001chaff}. {\tt clasp} can also
+do MaxSAT-style optimization.
 %\texttt{gringo} ``grounds'' the first-order input problem to produce the
 %propositional form accepted by {\tt clasp}.
 %
-The internals of {\tt clingo} are outside the scope of this paper, but it is important
-to understand that because SAT is effectively an exhaustive combinatorial search, it
+The internals of {\tt clingo} are beyond the scope of this paper, but is important to
+understand that because it effectively performs an exhaustive combinatorial search, it
 guarantees completeness and optimality. There are no inputs for which {\tt clingo} will
-return a false negative (claim the rules are incompatible if they are not) and solutions
-returned by {\tt clingo} are guaranteed to be optimal, in the sense that
+return a false negative (claim compatible rules are incompatible) and solutions returned
+by {\tt clingo} are guaranteed to be optimal when optimization criteria are provided.

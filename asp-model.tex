@@ -3,70 +3,66 @@
 %-------------------------------------------------------------------------------
 \label{sec:asp-model}
 
-At a high-level, with the introduction of \clingo, our concretization
-combines:
+At a high-level, using \clingo, our concretizer combines:
 \begin{enumerate}
-\item A large number of \emph{facts} characterizing the specific problem being solved
-\item A small \emph{logic program} encoding the rules and constraints of the software model
+\item Many \emph{facts} characterizing the problem instance;
+\item A small \emph{logic program} encoding the rules and constraints of the software model; and
+\item Optimization criteria that define an {\it optimal} model.
 \end{enumerate}
-The facts are always generated starting from one or more \emph{root specs} that need to
-be concretized, and they account for both the metadata contained in the package recipes
-of all possible dependencies, as well as the current state of \spack{} in terms of
-configuration and installed software. For instance, a simple directive such as:
-
+The facts are always generated starting from one or more \emph{root specs}, and they
+account for metadata from all package recipes of possible dependencies, as well as
+the current state of \spack{} in terms of configuration and installed software. This
+directive:
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 version('1.2.11', sha256='ah45rstgef...')
 \end{minted}
-
+%
 in \texttt{zlib}'s recipe is translated to the following fact:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 version_declared("zlib", "1.2.11", 0).
 \end{minted}
-
+%
 where {\tt 0} is the preference weight of this version. Similarly, the request to
 concretize
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 zlib@1.2.11
 \end{minted}
-
+%
 generates the following three facts:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 root("zlib").
 node("zlib").
 version_satisfies("zlib","1.2.11").
 \end{minted}
-
-stating that \texttt{zlib} is a root node and should satisfy
-a version requirement.
-A typical solve has around $10k-100k$ facts which include
-the encoding of dependencies, variants, preferences, etc.
+%
+stating that \texttt{zlib} is a root node and should satisfy a version requirement. A
+typical solve has around $10k-100k$ facts that encode dependencies, variants,
+preferences, etc.
 
 The logic program encodes the software model used by \spack{} and only contains
 first-order rules, integrity constraints, and optimization objectives. The declarative
 nature of ASP makes it easy to enforce certain properties on the solution. For
 instance, these three lines ensure that we never have a cyclic dependency in a DAG:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 path(A, B) :- depends_on(A, B).
 path(A, C) :- path(A, B), depends_on(B, C).
 :- path(A, B), path(B, A).
 \end{minted}
-
-The first rule establishes the base case: if \texttt{A} depends
-on \texttt{B} there is a path from \texttt{A} to \texttt{B}.
-The second rule defines paths to transitive dependencies
-with a recursive definition: if there is a path from \texttt{A}
-to \texttt{B} and \texttt{B} depends on \texttt{C}, there is
-a path from \texttt{A} to \texttt{C}. The final line is an
-\emph{integrity constraint} stating that paths from \texttt{A}
-to \texttt{B} and paths from \texttt{B} to \texttt{A} cannot
-occur at the same time in a valid solution.
+%
+The first rule is the base case: if {\tt A} depends on {\tt B} there is a path from {\tt
+  A} to {\tt B}. The second rule defines paths to transitive dependencies recursively:
+if there is a path from {\tt A} to {\tt B} and {\tt B} depends on {\tt C}, there is a
+path from {\tt A} to {\tt C}. The final line is an \emph{integrity constraint} banning
+paths from {\tt A} to {\tt B} and paths from {\tt B} to {\tt A} from occurring together
+in a solution.
 
 To give a rough idea of the compactness and expressiveness of the ASP encoding, the
-entire logic program for the software model described here is around $800$ lines. The
+entire logic program for the software model described here is around $700$ lines. The
 concretization process is straightforward to follow conceptually within \spack:
 \begin{enumerate}
 \item Generate facts for all possible dependencies/installs \footnotemark;
@@ -74,14 +70,12 @@ concretization process is straightforward to follow conceptually within \spack:
 \item Retrieve the best stable model; and
 \item Build an {\it optimal} concrete DAG from the model.
 \end{enumerate}
-\footnotetext{It's worth stressing that the logic program changes only
-when the underlying software model changes, as opposed
-to the generated facts that are different whenever the root
-spec to be concretized or \spack's configuration changes.}
-The word ``optimal'' is emphasized since, while rules and integrity
-constraints fully determine if a solution is valid, we need
-optimization targets to select one of the many possible solutions
-in a way that fits user's expectations.
+\footnotetext{We stress that the logic program changes only when the underlying software
+  model changes, as opposed to the generated facts that are different whenever the root
+  spec to be concretized or \spack's configuration changes.} The word ``optimal'' is
+emphasized since, while rules and integrity constraints fully determine if a solution is
+valid, we need optimization targets to select one of the many possible solutions in a
+way that fits user's expectations.
 
 A good example to illustrate this point is target selection for DAG nodes. In \spack{}
 each node being built has a target microarchitecture associated with it, and we want to
@@ -91,31 +85,31 @@ processors). Previously this required some complicated logic mixed with the rest
 solve. The introduction of \clingo{} greatly simplified the problem definition. A
 cardinality constraint is used to express that each node must have one and only one
 target:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 1 { node_target(Package, Target) :
     target(Target) } 1 :- node(Package).
 \end{minted}
-
+%
 A rule ensures that the user's choice to set the target to a specific value is respected:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 node_target(P, T) :- node(P), node_target_set(P, T).
 \end{minted}
-
+%
 An integrity constraints prevents choosing a target not supported by the current compiler:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 :- node_target(P, T),
    not compiler_supports_target(C, V, T),
    node_compiler(P, C),
    node_compiler_version(P, C, V).
 \end{minted}
-
+%
 These three statements fully describe the characteristics of a valid solution. To pick
 the \emph{optimal} solution we also \emph{weight} the possible targets (the lower the
 weight, the best the target) and optimize over the sum of target weights:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 node_target_weight(P, W) :-
   node(P), node_target(P, T), target_weight(T, W).
@@ -134,29 +128,29 @@ One interesting abstraction, that we observed while coding the ASP logic program
 that each of these directives can be seen as a way to impose additional constraints on
 the solution, conditional on other constraints being met. For instance, the following
 directive in a package:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 depends_on('hdf5+mpi', when='+mpi')
 \end{minted}
-
-means that, if the spec has the \texttt{mpi} variant turned on, then it depends on \texttt{hdf5+mpi}. Similarly:
-
+%
+means that, if the spec has the {\tt mpi} variant turned on, then it depends on {\tt hdf5+mpi}. Similarly:
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 provides('lapack', when='@12.0:')
 \end{minted}
-
-means that a package provides the \texttt{LAPACK} API if its version is $12.0$ or greater.
+%
+means that a package provides the {\tt LAPACK} API if its version is $12.0$ or greater.
 This property allowed to encode all the directives as \emph{generalized conditions}, where most of the semantics is encoded abstractly in a few lines of the logic program.
 
 Getting back to a simple example, the snippet below:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 class H5utils(AutotoolsPackage):
     depends_on('png@1.6.0:', when='+png')
 \end{minted}
-
+%
 is translated to the following facts:
-
+%
 \begin{minted}[fontsize=\scriptsize, bgcolor=bg]{prolog}
 condition(153).
 condition_requirement(153, "node", "h5utils").
@@ -164,7 +158,7 @@ condition_requirement(153, "variant_value", "h5utils", "png", "true").
 imposed_constraint(153, "version_satisfies", "libpng", "1.6.0:").
 dependency_condition(153, "h5utils", "libpng").
 \end{minted}
-
+%
 when setting up the problem to be solved by \clingo. The important points to note are that:
 
 \begin{itemize}
@@ -172,9 +166,10 @@ when setting up the problem to be solved by \clingo. The important points to not
 \item Constraints are either ``requirement'' or ``imposed''.
 \item Different type of conditions have different semantics\footnotemark
 \end{itemize}
-\footnotetext{For instance, the \texttt{dependency\_condition} fact is present only for \texttt{depends\_on} directives and activates logic that is specific to dependencies.}
-The code to trigger and impose general conditions in the logic program is surprisingly simple to read. ASP conditional rules allow us to effectively build new rules from input facts:
+\footnotetext{For instance, the {\tt dependency\_condition} fact is present only for {\tt depends\_on} directives and activates logic that is specific to dependencies.}
 
+The code to trigger and impose general conditions in the logic program is surprisingly simple to read. ASP conditional rules allow us to effectively build new rules from input facts:
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 condition_holds(ID) :-
 condition(ID);
@@ -182,14 +177,14 @@ attr(N, A1): condition_requirement(ID, N, A1);
 attr(N, A1, A2): condition_requirement(ID, N, A1, A2);
 ...
 \end{minted}
-
+%
 based on their \emph{arity}. Other rules, similar to:
-
+%
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 attr(N, A1) :-
   condition_holds(ID), imposed_constraint(ID, N, A1).
 \end{minted}
-
+%
 enforce the imposed constraints when a condition holds.
 
 \subsection{Usability Improvements due to \clingo}
@@ -205,7 +200,7 @@ tedious.
 %eliminated from concretization.
 
 \subsubsection{Conditional Dependencies}
-A prominent example of this behavior is with packages having dependencies conditional to a variant being set to a non-default value. Let's take for instance \texttt{hpctoolkit}, which has the following directives:
+A prominent example of this behavior is with packages having dependencies conditional to a variant being set to a non-default value. Let's take for instance {\tt hpctoolkit}, which has the following directives:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 class Hpctoolkit(AutotoolsPackage):
@@ -213,7 +208,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
 \end{minted}
 
-Trying to use the old algorithm to concretize \texttt{hpctoolkit \^{}mpich} fails like this:
+Trying to use the old algorithm to concretize {\tt hpctoolkit \^{}mpich} fails like this:
 
 \begin{minted}[fontsize=\footnotesize, bgcolor=bg]{console}
 % spack spec hpctoolkit ^mpich
@@ -226,13 +221,13 @@ Concretized
 --------------------------------
 ==> Error: Package hpctoolkit does not depend on mpich
 \end{minted}
-
+%
 since the greedy algorithm would set variant values before descending to dependencies.
-Since no value is specified for the \texttt{mpi} variant, the value chosen is
-\texttt{false} (the default) which leads to \texttt{hpctoolkit} having no dependency on
-\texttt{mpi}. The workaround required users to understand the conditional dependency and
-write \texttt{hpctoolkit+mpi \^{}mpich} to concretize succesfully. With \clingo{}, the
-concretizer simply {\it finds} the correct value for the \texttt{mpi} variant, as
+Since no value is specified for the {\tt mpi} variant, the value chosen is
+{\tt false} (the default) which leads to {\tt hpctoolkit} having no dependency on
+{\tt mpi}. The workaround required users to understand the conditional dependency and
+write {\tt hpctoolkit+mpi \^{}mpich} to concretize succesfully. With \clingo{}, the
+concretizer simply {\it finds} the correct value for the {\tt mpi} variant, as
 setting it is the only way for {\tt mpich} to be part of the solution.
 
 %, as shown in Figure~\ref{fig:hpctoolkit}.
@@ -240,7 +235,7 @@ setting it is the only way for {\tt mpich} to be part of the solution.
 % FIXME: Figure is too small, what should we do about that? Remove it? Show only part?
 %\begin{figure}[h]
 %\includegraphics[width=\columnwidth]{figures/hpctoolkit_concretized.pdf}
-%\caption{\texttt{hpctoolkit \^{}mpich} as concretized on an Ubuntu 20.04 OS using system compilers}
+%\caption{{\tt hpctoolkit \^{}mpich} as concretized on an Ubuntu 20.04 OS using system compilers}
 %\label{fig:hpctoolkit}
 %\end{figure}
 
@@ -258,7 +253,7 @@ solve\footnotemark{} and \spack{} no longer needs to ask the user to be more spe
 \subsubsection{Specialization on Providers of Virtual Packages}
 Using \clingo{} also enabled more complex use cases e.g. imposing constraints on
 specific virtual package providers. A simple example of that is given by the
-\texttt{berkeleygw} package, which has the following directives:
+{\tt berkeleygw} package, which has the following directives:
 
 \begin{minted}[fontsize=\small, bgcolor=bg]{python}
 class Berkeleygw(MakefilePackage):
@@ -268,8 +263,70 @@ class Berkeleygw(MakefilePackage):
                when='+openmp ^openblas')
 \end{minted}
 
-The last directive forces \texttt{openblas} to have \texttt{openmp} support if
-\texttt{berkeleygw} has \texttt{openmp} support and \texttt{openblas} has been chosen as
-a provider for the mandatory \texttt{lapack} virtual dependency. Conditional constraints
+The last directive forces {\tt openblas} to have {\tt openmp} support if
+{\tt berkeleygw} has {\tt openmp} support and {\tt openblas} has been chosen as
+a provider for the mandatory {\tt lapack} virtual dependency. Conditional constraints
 of that complexity could not be expressed before, because the solver would select
 defaults for {\tt openblas} before evaluating the conditional constraint on it.
+
+\subsection{Optimization Criteria}
+
+\begin{table}[t]
+\centering
+\begin{tabular}{| c || l |}
+ \hline
+ Priority & Criterion (to be minimized) \\
+ \hline\hline
+ 1  & Deprecated versions used \\
+ \hline
+ 2  & Version oldness (roots) \\
+ 3  & Non-default variant values (roots) \\
+ 4  & Non-preferred providers (roots) \\
+ 5  & Unused default variant values (roots) \\
+ \hline
+ 6  & Non-default variant values (non-roots) \\
+ 7  & Non-preferred providers (non-roots) \\
+ \hline
+ 8  & Compiler mismatches \\
+ 9  & OS mismatches \\
+ 10 & Non-preferred OS's \\
+ \hline
+ 11 & Version oldness (non-roots) \\
+ 12 & Unused default variant values (non-roots) \\
+ \hline
+ 13 & Non-preferred compilers \\
+ 14 & Target mismatches \\
+ 15 & Non-preferred targets \\
+ \hline
+\end{tabular}
+\caption{Spack's optimization criteria in order of priority.}
+\label{table:optimization-criteria}
+\end{table}
+
+The conditional logic presented here provides a great deal of flexibility, but with this
+flexibility we also need to have sensible defaults for users who do not want to think
+about all of the degrees of freedom Spack allows. Coming up with ``intuitive'' solutions
+to the package configuration problem is surprisingly difficult, but we have developed
+the list of optimization criteria in Figure~\ref{table:optimization-criteria} based on
+our experiences interacting with users and facilities. There are currently 15 criteria
+we consult at to pick the best valid solution for a package DAG. All are minimization
+criteria, and they are evaluated in lexicogrpahic order, i.e., the highest priority
+criteria are optimized first, then the next highest, and so on.
+
+Our top priority (1) is to avoid software versions that have been deprecated due to
+security concerns or bugs. Priorities 2-5 choose the newest versions and default variant
+values and providers for {\it roots} in the DAG. We prioritize versions first, then
+virtual providers (e.g., the user's preferred MPI), then default variant values. After
+root configuration, we prioritize non-root configuration (6-7, 11-12). Preferences flow
+downward in the DAG via dependency relationships, and if a root demands a particular
+version of a dependency, the dependency's preference should not be able to override
+this. Ideally, we would enforce strict DAG precedence on preferences (i.e., every node's
+preference would dominate those of its dependencies), but we have seen performance
+penalties when attempting to track the relative depths of all nodes, so we settle for a
+two-level hierarchy of roots and non-roots. We try to enforce consistency in the
+resolved graph by minimizing ``mismatches'' (8-9, 14)---these criteria ensure that
+neighboring nodes are assigned consistent compilers, OS's and targets unless otherwise
+requested. We model preferred compilers, targets, and OS's for non-roots at lower
+priority than mismatches, so that dependencies inherit these properties from their
+dependents unless set explicitly by the user. All preferred versions, compilers, OS's,
+targets, etc. can be overridden through configuration in Spack.
