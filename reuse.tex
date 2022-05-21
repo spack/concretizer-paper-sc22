@@ -133,23 +133,23 @@ Note that reuse takes priority over the defaults for already installed software,
 allowing \spack{} to reuse \texttt{cmake} 3.21.1 even though the preferred version for a
 new build is 3.21.4.
 
-\begin{figure}[h]
+\begin{figure*}[h]
   \centering
   \subfloat[][With hash-based reuse: all misses]{
-    \includegraphics[width=2.4in]{figures/no-reuse.png}
+    \includegraphics[width=.4\textwidth]{figures/no-reuse.png}
     \label{fig:noreuse}
-  }\\
+  }
 %  \caption{Concretization of \texttt{hdf5} with pure hash-based reuse: all misses}
 %\end{figure}
   %\begin{figure}[h]
-  \subfloat[][Solving for reuse: 16 packages are actually acceptable]{
-    \includegraphics[width=2.4in]{figures/reuse.png}
+  \subfloat[][Solving for reuse: 16 packages reused for {\tt hdf5} build]{
+    \includegraphics[width=.45\textwidth]{figures/reuse.png}
     \label{fig:reuse}
   }
-  \caption{Concretization with and without reuse optimization.}
+  \caption{Concretization with and without reuse optimization. \vspace{-1em}}
   %\caption{The solver is asked to concretize \texttt{hdf5} trying to reuse installed software as much as possible. We see that 16 installed packages are actually acceptable to be reused. Another notable take is that, due to the priority chosen for minimizing the number of builds it is actually acceptable to \emph{reuse} \texttt{cmake} at version 3.21.1 even though the preferred version if it was to be built is 3.21.4}
 
-\end{figure}
+\end{figure*}
 
 
 %- reuse of half the generalized condition

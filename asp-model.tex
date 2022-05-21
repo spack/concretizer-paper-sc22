@@ -338,7 +338,8 @@ Spack's optimization criteria are unique among dependency solvers in that many o
 are simply not modeled by other systems. In a typical Linux distribution like Debian,
 target and toolchain compatibility are not modeled---they are uniform across the DAG. If
 we look at {\tt aspcud}~\cite{gebser+:2011-aspcud}, an ASP solver plugin for Debian's
-APT, we see that there are around 6 optimization criteria, but they all have to do with
-versions and version preferences, far fewer than the 15 criteria modeled here. {\tt
-  aspcud} also does not model edges in the graph the same way---it only considers one
-installation of each package, so nodes are either included in the model or not.
+APT, we see that there are around 6 optimization criteria, all to do with
+versions and version preferences, far fewer than the 15 criteria modeled here.
+%{\tt
+%  aspcud} also does not model edges in the graph the same way---it only considers one
+%installation of each package, so nodes are either included in the model or not.
