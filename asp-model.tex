@@ -24,8 +24,7 @@ in \texttt{zlib}'s recipe is translated to the following fact:
 version_declared("zlib", "1.2.11", 0).
 \end{minted}
 %
-where {\tt 0} is the preference weight of this version. Similarly, the request to
-concretize
+where {\tt 0} is the preference weight of this version. Similarly:
 %
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 zlib@1.2.11
@@ -62,7 +61,7 @@ paths from {\tt A} to {\tt B} and paths from {\tt B} to {\tt A} from occurring t
 in a solution.
 
 To give a rough idea of the compactness and expressiveness of the ASP encoding, the
-entire logic program for the software model described here is around $700$ lines. The
+entire logic program for the software model described here is around $800$ lines. The
 concretization process is straightforward to follow conceptually within \spack:
 \begin{enumerate}
 \item Generate facts for all possible dependencies/installs \footnotemark;
@@ -83,15 +82,15 @@ use the best target possible while respecting the constraints coming from the co
 (for example, {\tt gcc@4.8.3} cannot generate optimized instructions for {\tt skylake}
 processors). Previously this required some complicated logic mixed with the rest of the
 solve. The introduction of \clingo{} greatly simplified the problem definition. A
-cardinality constraint is used to express that each node must have one and only one
-target:
+cardinality constraint is used to express that the solver must choose one and only one
+target per node:
 %
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
-1 { node_target(Package, Target) :
-    target(Target) } 1 :- node(Package).
+1 { node_target(Package, Target) : target(Target) } 1
+    :- node(Package).
 \end{minted}
 %
-A rule ensures that the user's choice to set the target to a specific value is respected:
+A user's choice will force the target of a node:
 %
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 node_target(P, T) :- node(P), node_target_set(P, T).
@@ -118,13 +117,13 @@ node_target_weight(P, W) :-
 
 \subsection{Generalized Condition Handling}
 \label{subsec:generalizedcond}
-A unique feature of \spack, as a package manager, is that it doesn't only optimize for
-versions but for many other aspects of the build as well e.g. which compiler to use,
+A unique feature of \spack, as a package manager, is that it optimizes not only for
+versions but for many other aspects of the build, e.g., which compiler to use,
 which microarchitecture to target, etc. The DSL used for package recipes reflects this
-complexity by having multiple directives to declare different properties or constraints
-for each software, as seen in Section~\ref{sec:software-model}.
+complexity by having multiple directives to declare properties or constraints
+on software packages, as seen in Section~\ref{sec:software-model}.
 
-One interesting abstraction, that we observed while coding the ASP logic program, is
+One interesting abstraction that we observed while coding the ASP logic program is
 that each of these directives can be seen as a way to impose additional constraints on
 the solution, conditional on other constraints being met. For instance, the following
 directive in a package:

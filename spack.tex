@@ -217,7 +217,7 @@ conflict with {\tt bzip2@1.0.7}. In our example, we were lucky that the concreti
 selected {\tt bzip2@1.0.8} to satisfy the constraint {\tt bzip2@1.0.7:} (recall that
 means \texttt{bzip2} at version 1.0.7 or higher). Had the default choice been {\tt
   bzip2@1.0.7}, there would have been no way for the algorithm to backtrack, and it would
-report an error without finding the solution.
+fail with no solution.
 
 \subsubsection{Optimality}
 There are usually many {\it valid} solutions to concretization problems, but users

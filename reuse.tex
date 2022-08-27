@@ -53,7 +53,7 @@ source, the solver is allowed to choose a hash to resolve any package:
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 {hash(P, Hash) : installed_hash(P, Hash)} 1 :- node(P).
 \end{minted}
-Impose all constraints associated with chosen hashes:
+It imposes all constraints associated with chosen hashes:
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 impose(Hash) :- hash(P, Hash).
 \end{minted}
@@ -93,47 +93,73 @@ dependencies from the graph!
 %% to build one version without networking capabilities just because that permits to trim
 %% \texttt{openssl} and its dependencies from the graph!
 
-Our solution is to split the optimization criteria into two identical ``buckets'', one
-for installed software and one for software that is yet to be built, and optimize for
-them at different priorities:
+Our solution is to split the optimization criteria into two sets of identical
+``buckets'', one for installed software and one for software to be built,
+and order their priorities:
 \begin{enumerate}
 \item Minimize all objectives for software to be built
 \item Then, minimize the number of builds
-\item Minimize the objectives for already built software
+\item Minimize all objectives for already built software
 \end{enumerate}
-Minimizing the number of builds at a priority that is always higher than any other
-criteria for installed software, but always lower than any criteria for software to be
-built allows \spack{} to pick the best version available from what is installed without
-adversely affecting the choice of defaults for built packages. This is actually simple
-to encode in ASP:
+
+\noindent
+This is actually fairly simple to encode in ASP:
 
 \begin{minted}[fontsize=\footnotesize, bgcolor=bg]{prolog}
 build_priority(P, 200) :- build(P), node(P).
 build_priority(P, 0)   :- not build(P), node(P).
 % ....
 #minimize{
-    W@5+Priority,P
+    W@2+Priority,P
     : version_weight(P, W), build_priority(P, Priority)
 }.
 \end{minted}
 
-Here, {\tt Priority} will be 200 for built packages and 0 for preinstalled packages, and
-we can use this to control the priority of the minimization objective. This {\tt
-  \#minimize} sums into {\it two} buckets in a global per-solution vector, which is
-ultimately compared lexicographically.
+For each criterion defined in Table~\ref{table:optimization-criteria}, we include a {\tt
+  \#minimize} statement like the one above. It contributes a version weight {\tt W} for
+each package {\tt P} in the graph to bucket number {\tt 2 + Priority}. {\tt Priority} is
+200 if the package needs to be built, but it is zero if the package is already
+installed. The structure of these buckets for a scenario with three criteria is shown in
+Figure~\ref{fig:opt-vector}. Buckets are ordered by priority from high to low, and the
+three per-criterion buckets for built packages have priorities 203, 202, and 201. In the
+middle, at priority 100, is the total number of builds, and below it are all the
+original criteria with their original numbers: 3, 2, and 1. This vector is computed for
+each model and compared lexicographically to determine the ``best'' one.
+
+If we ensure that all of our optimization criteria are minimizing, i.e., that the
+``best'' value for any criterion is zero, then any scenario where a package must be
+built will still be worse than one where it is reused. Even if all criteria are
+minimized for built packages, the number of builds will still be greater than zero,
+making the build scenario worse, becaues number of builds has higher priority. This
+allows \spack{} to pick the best version available from what is installed without
+adversely affecting the choice of defaults for built packages. \spack{} will prefer to
+build the default configuration of a package that it {\it has} to build, even if that
+means building more packages. However, if some installed package {\it can} satisfy a
+dependency requirement, \spack{} will prefer to reuse it.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.8\columnwidth]{figures/sums.pdf}
+  \caption{
+    Vector of accumulated weights of optimization criteria.
+    \label{fig:opt-vector}
+  }
+\end{figure}
+
 %
 %To conclude this section we will show an example of how effective this approch is to
 %reuse software.
 %
-Figure~\ref{fig:noreuse} shows a concretization relying on purely hash-based software
-reuse. We can see that no match was found and 20 installations need to be performed from
-source. In Figure~\ref{fig:reuse} we show the same concretization with the reuse logic
-turned on. In this case 16 installed packages can be reused and only 4 need to be built.
-Note that reuse takes priority over the defaults for already installed software,
-allowing \spack{} to reuse \texttt{cmake} 3.21.1 even though the preferred version for a
-new build is 3.21.4.
+The benefits of reusing packages are clear. Figure~\ref{fig:noreuse} shows a
+concretization relying on purely hash-based software reuse. We can see that no match was
+found and 20 installations need to be performed from source. In Figure~\ref{fig:reuse}
+we show the same concretization with the reuse logic turned on. In this case 16
+installed packages can be reused and only 4 need to be built. As described above, reuse
+takes priority over the defaults for already installed software, allowing \spack{} to
+reuse \texttt{cmake} 3.21.1 even though the preferred version for a new build is 3.21.4.
+This can save users considerable time.
 
-\begin{figure*}[h]
+\begin{figure*}[ht]
   \centering
   \subfloat[][With hash-based reuse: all misses]{
     \includegraphics[width=.4\textwidth]{figures/no-reuse.png}
@@ -143,7 +169,7 @@ new build is 3.21.4.
 %\end{figure}
   %\begin{figure}[h]
   \subfloat[][Solving for reuse: 16 packages reused for {\tt hdf5} build]{
-    \includegraphics[width=.45\textwidth]{figures/reuse.png}
+    \includegraphics[width=.43\textwidth]{figures/reuse.png}
     \label{fig:reuse}
   }
   \caption{Concretization with and without reuse optimization. \vspace{-1em}}

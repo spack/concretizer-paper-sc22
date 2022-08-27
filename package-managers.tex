@@ -16,7 +16,7 @@ to manage the system packages of most Linux distributions. These tools focus on 
 one software stack, built with one compiler, which works well for system software and
 drivers that underly all software on the system. They are designed so that software can
 be upgraded in place for bugfixes and security updates. All software goes in to a single
-{\it prefix}, e.g. {\tt /usr}, and for this reason, only one version of any package can
+{\it prefix}, e.g., {\tt /usr}, and for this reason, only one version of any package can
 be installed at a time. Upgrades are prioritized over reproducibility, and users do not
 have great flexibility over precise package versions and configurations.
 
@@ -39,13 +39,13 @@ package managers are different from those in a linux distribution; they typicall
 multiple versions of the same package to be installed to support developer workflows and
 reproducibility. Conflicts can arise, as most langauge module systems do not support
 {\it linking} multiple versions of one package into a single executable. Javascript is a
-notable exception to this. These language package managers still solve only for package
+notable exception to this. Language package managers still solve only for package
 names and versions, ignoring compilers, build options, targets and other options that
 expand the solution space. Most language package managers implement their own ad-hoc
-solvers in their own language. Historically these solvers were not complete, as
+solvers. Historically, these solvers were not complete, as
 implementing a performant SAT solver in all but the lowest-level languages is quite
 difficult. However, there has been a recent trend towards complete
-solvers~\cite{pip-new-resolver,weizenbaum:pubgrub18} as the complexity of language
+solvers~\cite{pip-new-resolver,weizenbaum:pubgrub18} as complexity of language
 ecosystems has grown. These systems do not support optimization beyond selecting recent
 versions~\cite{abate2020dependency}.
 

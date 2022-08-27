@@ -13,23 +13,6 @@
 %  }
 %\end{figure}
 
-%% \begin{figure}
-%%   \centering
-%%   \includegraphics[width=\columnwidth]{figures/e4s.pdf}
-%%   \caption{
-%%     All packages in E4S 21.11 (red) and their dependencies (blue).
-%%     E4S 21.11 (the current release) is deployed using a Spack environment containing roughly 100 ro\
-%% ot specs,
-%%     which equates to the installation of as many as 500 Spack packages to complete the
-%%     installation. The precise number of packages required for a deployment of E4S
-%%     is system-specific as they need the underlying hardware (e.g., NVIDIA, AMD GPUs).
-%%     The total number of packages deployed also depends on the use of facility-managed packages that\
-%%  are already installed on the system, as these may be
-%%     re-used with Spack as externals in the custom E4S Spack environment.
-%%     \label{fig:e4s-graph}
-%%   }
-%% \end{figure}
-
 Managing dependencies for scientific software is notoriously
 difficult~\cite{hoste+:pyhpc12,gamblin+:sc15,dubois2003johnny,hochstein+:2011-build}.
 Scientific software is typically built from source to achieve good performance, and
@@ -39,8 +22,8 @@ benefits such as separation of concerns, encapsulation, and code reuse. These en
 application codes to leverage fast math libraries~\cite{hypre,mfem,petsc,trilinos} and
 GPU performance portability frameworks like RAJA~\cite{raja} and Kokkos~\cite{kokkos}.
 However, the cost of modularity is integration complexity: consumers of components must
-ensure that versions and parameters are chosen to ensure that all integrated components
-work together.
+ensure that versions and other parameters are chosen correctly to ensure that all
+integrated components work together.
 
 {\it Package managers} emerged in the mid-1990's to mitigate the complexity of
 integrating software packages in Linux distributions. In the past decade, their use has
@@ -50,17 +33,31 @@ HPC-centric package managers Spack~\cite{gamblin+:sc15} and
 EasyBuild~\cite{hoste+:pyhpc12} are now widely used for software deployment at HPC
 centers, and by developers and users installing their own software. The U.S. Exascale
 Computing Project (ECP) has adopted Spack as the distribution tool for its
-E4S~\cite{e4s} software stack, which contains 100 packages with 400 dependencies.
+E4S~\cite{e4s} software stack (shown in Figure~\ref{fig:e4s-graph}), which contains
+around 100 core software products and 500 required dependency packages.
+
+\begin{figure*}
+  \centering
+  \includegraphics[width=\textwidth]{figures/e4s.pdf}
+  \caption{
+    Graph of package dependencies in the Extreme Scale Scientific Software Stack (E4S)~\cite{e4s}.
+    Around 100 core software products are shown in red, and the 500 required dependencies
+    are blue. The precise number of packages required for a deployment of E4S
+    is system-specific, depending on platform and hardware (e.g., NVIDIA, AMD GPUs).
+    \label{fig:e4s-graph}
+  }
+\end{figure*}
 
 Package managers address the integration problem in two main ways. Systems like
-EasyBuild rely on human effort, where maintainers develop fixed package configurations
-that define a common stack, which is shared among users. To deviate from the stack,
-users must update all configuration files to ensure that versions and other parameters
-are consistent. More commonly, package managers like Spack provide flexibility for the
-end user by incorporating {\it dependency solvers} at their core. Users can request
-arbitrary versions, and packages declare {\it constraints} that bound the space of
-compatible configurations. The solver selects a set of versions and configuration
-parameters that satisfy the user's requirements and package constraints.
+EasyBuild and Nix~\cite{dolstra+:icfp08,dolstra+:lisa04} rely on human effort, where
+maintainers develop fixed package configurations that define a common stack to be
+shared among users. To deviate from the stack, users must update all configuration files
+to ensure that versions and other parameters are consistent. More commonly, package
+managers like Spack provide flexibility for the end user by incorporating {\it
+  dependency solvers} at their core. Users can request arbitrary versions, and packages
+declare {\it constraints} that bound the space of compatible configurations. The solver
+selects a set of versions and configuration parameters that satisfy the user's
+requirements and package constraints.
 
 Dependency solving is NP-complete, even for a ``simple'' configuration space with only
 packages and versions~\cite{dicosmo:edos,cox:version-sat}. Here, we focus on Spack's

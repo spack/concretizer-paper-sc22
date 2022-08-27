@@ -48,11 +48,10 @@ substitutions for variables. For example:
 %referred to as ``safety'' in ASP, and is essential to ensuring the algorithm will
 %terminate.
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
-  optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Dependency) :- node(Package),
-                      depends_on(Package, Dependency).
+  node(Dependency) :-
+      node(Package), depends_on(Package, Dependency).
 \end{minted}
 The rule here translates roughly to ``If a package is in the graph and it depends on
 another package, that package must be in the graph'', and the rule in the program above
@@ -69,11 +68,10 @@ Two additional types of rules are important to understand the power of ASP:
 Integrity constraints allow the programmer to rule out swathes of the answer set space
 by specifying conditions not to allow. In ASP, these are represented by a headless rule:
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
-  optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Dependency) :- node(Package),
-                      depends_on(Package, Dependency).
+  node(Dependency) :-
+      node(Package), depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 \end{minted}
 This constraint says ``a package cannot depend on itself''.
@@ -84,17 +82,16 @@ Choice rules give the solver freedom to choose from possible options. A choice r
 (optionally) constrained on either side to specify the minimum (left) and maximum
 (right) number of choices the solver can select.
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
-  optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Dependency) :- node(Package),
-                      depends_on(Package, Dependency).
+  node(Dependency) :-
+      node(Package), depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 
   possible_version("hdf5", "1.13.1").
   possible_version("hdf5", "1.12.1").
-  1 { version(P, V) : possible_version(P, V) } 1
-    :- node(P).
+  1 { version(P, V) : possible_version(P, V) } 1 :-
+      node(P).
 \end{minted}
 The choice rule on the last line means ``If a package is in the graph, assign it
 exactly one of its possible versions.'' The $\{a:b\}$ syntax here has the same meaning
@@ -111,32 +108,31 @@ they give the solver options for paths to explore next.
 
 In addition to constraints on the solution space, ASP allows optimization criteria.
 Optimization criteria allow the solver to return a single answer set from the among all
-valid answer sets, and guarantee that the chosen answer set minimizes or maximizes one
+valid answer sets, and they guarantee that the chosen answer set minimizes or maximizes one
 or many criteria. There are often many valid solutions to a dependency resolution query,
 but only the optimal solution is relevant once we find it.
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
-  optimize_for_reuse.
   node("hdf5").
   depends_on("hdf5", "mpi").
-  node(Dependency) :- node(Package),
-                      depends_on(Package, Dependency).
+  node(Dependency) :-
+      node(Package), depends_on(Package, Dependency).
   :- depends_on(Package, Package).
 
   possible_version("hdf5", "1.13.1", 0).
   possible_version("hdf5", "1.12.1", 1).
 
-  1 { version(P, V) : possible_version(P, V) } 1
-    :- node(P).
+  1 { version(P, V) : possible_version(P, V) } 1 :-
+      node(P).
 
-  version_weight(P, V, Weight)
-    :- possible_version(P, V, Weight).
+  version_weight(P, V, Weight) :-
+      possible_version(P, V, Weight).
   #minimize{ W@3,P,V : version_weight(P, V, W)}.
 \end{minted}
 This optimization constraint says ``I prefer (at priority 3) solutions that minimize the
-sum of the weights (W) of the package (P) versions (V), for all packages and versions.''
-A detailed discussion of the syntax for optimization is beyond the scope of this paper;
-it suffices to know that multi-objective optimization across a variety of criteria is
-possible in ASP.
+sum of the weights ({\tt W}) of the package ({\tt P}) versions ({\tt V}), for all
+packages and versions.'' A detailed discussion of the syntax for optimization is beyond
+the scope of this paper; it suffices to know that multi-objective optimization across a
+variety of criteria is possible in ASP.
 
 Our small and very incomplete program here already shows the power of ASP. In a SAT
 solver, the programmer would need to write out explicitly the rule for deriving
@@ -157,7 +153,7 @@ makes this much simpler.
 ASP solvers search the input program for {\it stable models}, also known as
 \textit{answer sets}. An answer set is a set of true atoms for which every rule in the
 input program is idempotent. It is similar to a fixed point, or the solution to a system
-of (boolean) equations. When ASP first emerged in the late 1990's, it used own solvers.
+of (boolean) equations. When ASP first emerged in the late 1990's, it used custom solvers.
 However, the problem domain of ASP is NP-complete, and the 2000's brought great
 advances~\cite{moskewicz2001chaff} in solving the canonical NP-complete problem: Boolean
 satisfiability (SAT). Modern ASP solvers exploit high-performance techniques developed
@@ -211,5 +207,5 @@ do MaxSAT-style optimization.
 The internals of {\tt clingo} are beyond the scope of this paper, but is important to
 understand that because it effectively performs an exhaustive combinatorial search, it
 guarantees completeness and optimality. There are no inputs for which {\tt clingo} will
-return a false negative (claim compatible rules are incompatible) and solutions returned
-by {\tt clingo} are guaranteed to be optimal when optimization criteria are provided.
+return a false negative (claim compatible rules are incompatible) and solutions
+are guaranteed to be optimal according to provided criteria.
