@@ -1,0 +1,1 @@
+Sergei Shudler is an applied researcher in high-performance computing (HPC) in the Center for Applied Scientific Computing at Lawrence Livermore National Laboratory.  His research focuses on tools and workflows that target scalability bottlenecks in simulation applications, both from performance and data processing aspects.
