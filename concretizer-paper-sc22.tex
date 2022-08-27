@@ -14,6 +14,9 @@
 \usepackage{xspace}
 \usepackage[inline]{enumitem}
 
+\usepackage[hidelinks]{hyperref}
+
+
 % Use for decent code formatting
 \usepackage{inconsolata}
 \usepackage[outputdir=build]{minted}
@@ -29,7 +32,7 @@
 
 \begin{document}
 
-\title{Using Answer Set Programming for HPC Dependency Solving\vspace{-1.5em}}
+\title{Using Answer Set Programming for HPC Dependency Solving}
 
 % \author{%
 % \IEEEauthorblockN{Todd Gamblin}
@@ -57,15 +60,22 @@
 % shudler1@llnl.gov}
 % }
 
-%% \author{\IEEEauthorblockN{%
-%% Todd Gamblin\IEEEauthorrefmark{1}, %
-%% Massimiliano Culpo\IEEEauthorrefmark{2}, %
-%% Gregory Becker\IEEEauthorrefmark{1}, %
-%% Sergei Shudler\IEEEauthorrefmark{1}}
-%% \IEEEauthorblockA{\IEEEauthorrefmark{1}Lawrence Livermore National Laboratory, Livermore, CA, USA\\
-%% Email: \{tgamblin, becker33, shudler1\}@llnl.gov}
-%% \IEEEauthorblockA{\IEEEauthorrefmark{2}np-complete, S.r.l., Italy\\
-%% Email: massimiliano.culpo@googlemail.com}}
+\author{%
+  \IEEEauthorblockN{%
+    Todd Gamblin\IEEEauthorrefmark{1}, %
+    Massimiliano Culpo\IEEEauthorrefmark{2}, %
+    Gregory Becker\IEEEauthorrefmark{1}, %
+    Sergei Shudler\IEEEauthorrefmark{1}}
+  \IEEEauthorblockA{%
+    \IEEEauthorrefmark{1}Lawrence Livermore National Laboratory, Livermore, CA, USA\\
+    \{\tt%
+    \href{mailto:tgamblin@llnl.gov}{tgamblin}, %
+    \href{mailto:becker33@llnl.gov}{becker33}, %
+    \href{mailto:shudler1@llnl.gov}{shudler1}%
+    \}@llnl.gov}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}np-complete, S.r.l., Italy\\
+  {\tt\href{mailto:massimiliano.culpo@googlemail.com}{massimiliano.culpo@googlemail.com}}}
+}
 
 %\author{
 %  \IEEEauthorblockN{%
