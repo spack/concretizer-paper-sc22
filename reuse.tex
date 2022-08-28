@@ -130,7 +130,7 @@ If we ensure that all of our optimization criteria are minimizing, i.e., that th
 ``best'' value for any criterion is zero, then any scenario where a package must be
 built will still be worse than one where it is reused. Even if all criteria are
 minimized for built packages, the number of builds will still be greater than zero,
-making the build scenario worse, becaues number of builds has higher priority. This
+making the build scenario worse, because number of builds has higher priority. This
 allows \spack{} to pick the best version available from what is installed without
 adversely affecting the choice of defaults for built packages. \spack{} will prefer to
 build the default configuration of a package that it {\it has} to build, even if that
@@ -142,6 +142,10 @@ dependency requirement, \spack{} will prefer to reuse it.
   \includegraphics[width=.8\columnwidth]{figures/sums.pdf}
   \caption{
     Vector of accumulated weights of optimization criteria.
+    Contributions to each criterion's objective are divided into two buckets:
+    a higher priority bucket if the package is to be built, and a lower priority bucket
+    if the package is already installed. Objective vectors are compared lexicographically.
+    \vspace{-1em}
     \label{fig:opt-vector}
   }
 \end{figure}

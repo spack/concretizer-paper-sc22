@@ -171,17 +171,18 @@ The code to trigger and impose general conditions in the logic program is surpri
 %
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 condition_holds(ID) :-
-condition(ID);
-attr(N, A1): condition_requirement(ID, N, A1);
-attr(N, A1, A2): condition_requirement(ID, N, A1, A2);
-...
+ condition(ID);
+ attr(N, A1)    : condition_requirement(ID, N, A1);
+ attr(N, A1, A2): condition_requirement(ID, N, A1, A2).
 \end{minted}
 %
-based on their \emph{arity}. Other rules, similar to:
+based on their number of arguments, or \emph{arity}. Other rules:
 %
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
-attr(N, A1) :-
-  condition_holds(ID), imposed_constraint(ID, N, A1).
+attr(N, A1)     :- condition_holds(ID),
+                   imposed_constraint(ID, N, A1).
+attr(N, A1, A2) :- condition_holds(ID),
+                   imposed_constraint(ID, N, A1, A2).
 \end{minted}
 %
 enforce the imposed constraints when a condition holds.
@@ -210,7 +211,7 @@ class Hpctoolkit(AutotoolsPackage):
 Trying to use the old algorithm to concretize {\tt hpctoolkit \^{}mpich} fails like this:
 
 \begin{minted}[fontsize=\footnotesize, bgcolor=bg]{console}
-% spack spec hpctoolkit ^mpich
+$ spack spec hpctoolkit ^mpich
 Input spec
 --------------------------------
 hpctoolkit
@@ -225,7 +226,7 @@ since the greedy algorithm would set variant values before descending to depende
 Since no value is specified for the {\tt mpi} variant, the value chosen is
 {\tt false} (the default) which leads to {\tt hpctoolkit} having no dependency on
 {\tt mpi}. The workaround required users to understand the conditional dependency and
-write {\tt hpctoolkit+mpi \^{}mpich} to concretize succesfully. With \clingo{}, the
+write {\tt hpctoolkit+mpi \^{}mpich} to concretize successfully. With \clingo{}, the
 concretizer simply {\it finds} the correct value for the {\tt mpi} variant, as
 setting it is the only way for {\tt mpich} to be part of the solution.
 
@@ -312,7 +313,7 @@ to the package configuration problem is surprisingly difficult, but we have deve
 the list of optimization criteria in Figure~\ref{table:optimization-criteria} based on
 our experiences interacting with users and facilities. There are currently 15 criteria
 we consult at to pick the best valid solution for a package DAG. All are minimization
-criteria, and they are evaluated in lexicogrpahic order, i.e., the highest priority
+criteria, and they are evaluated in lexicographic order, i.e., the highest priority
 criteria are optimized first, then the next highest, and so on.
 
 Our top priority (1) is to avoid software versions that have been deprecated due to

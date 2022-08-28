@@ -3,8 +3,8 @@
 %-------------------------------------------------------------------------------
 \label{sec:package-managers}
 
-The idea of ``sofware release management'' for integrated sets of packages dates back to
-a 1997 paper from Ven der Hoek et al.~\cite{van1997software}, and the first Linux
+The idea of ``software release management'' for integrated sets of packages dates back to
+a 1997 paper from Van der Hoek et al.~\cite{van1997software}, and the first Linux
 package managers emerged around the same time~\cite{rpm,apt}. Since then, the number and
 complexity of software packages has grown enormously, as have the use cases for package
 managers.
@@ -14,7 +14,7 @@ managers.
 Package managers such as RPM, Yum, and APT~\cite{foster+:rpm03,silva:apt01,yum} are used
 to manage the system packages of most Linux distributions. These tools focus on managing
 one software stack, built with one compiler, which works well for system software and
-drivers that underly all software on the system. They are designed so that software can
+drivers that underlie all software on the system. They are designed so that software can
 be upgraded in place for bugfixes and security updates. All software goes in to a single
 {\it prefix}, e.g., {\tt /usr}, and for this reason, only one version of any package can
 be installed at a time. Upgrades are prioritized over reproducibility, and users do not
@@ -35,9 +35,9 @@ external solver~\cite{abate2020dependency}.
 
 Most modern language implementations also include their own package
 managers~\cite{npm,pip,cargo,weizenbaum:pubgrub18}. The solver requirements for language
-package managers are different from those in a linux distribution; they typically allow
+package managers are different from those in a Linux distribution; they typically allow
 multiple versions of the same package to be installed to support developer workflows and
-reproducibility. Conflicts can arise, as most langauge module systems do not support
+reproducibility. Conflicts can arise, as most language module systems do not support
 {\it linking} multiple versions of one package into a single executable. Javascript is a
 notable exception to this. Language package managers still solve only for package
 names and versions, ignoring compilers, build options, targets and other options that
@@ -58,7 +58,7 @@ deployments, they install each configuration to a unique prefix, but instead of 
 human-readable name, they ensure that each installation gets a unique prefix by using a
 hash of the bits of the installation itself. These systems do not use solvers to resolve
 dependencies. Rather, they have very little conditional logic and rely on the specific
-package recipes in a repository. As mentioned, Easybuild~\cite{hoste+:pyhpc12} is
+package recipes in a repository. As mentioned, EasyBuild~\cite{hoste+:pyhpc12} is
 similar in this regard, as it allows multiple configurations of packages by duplicating
 package recipes and adhering to a strict naming convention to differentiate different
 installations. In all of these systems, users must modify code in package recipes to

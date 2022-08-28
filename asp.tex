@@ -5,10 +5,10 @@
 
 The concretization problem is essentially a combinatorial search problem. While many
 package managers use homegrown SAT solvers for this type of problem, encoding the
-complexity of our domain in pure boolean SAT would be extremely tedious. To manage the
+complexity of our domain in pure Boolean SAT would be extremely tedious. To manage the
 complexity, we leverage Answer Set Programming (ASP), a form of declarative programming
 that allows us to formally specify our semantics in first-order logic with variables and
-quantification, in addition to boolean operators. The input language for ASP is similar
+quantification, in addition to Boolean operators. The input language for ASP is similar
 to Prolog~\cite{baral_2003}. Unlike Prolog, ASP has no operational semantics and is not
 Turing-complete. Rather, ASP converts first-order logic programs (with quantifiers and
 variables) to {\it propositional} programs (with no variables). It then uses techniques
@@ -21,7 +21,7 @@ than we can implement ourselves with simple heuristics.
 
 \subsection{ASP Syntax}
 
-ASP programs are comprised of ``terms'', which can be boolean atoms or a functions whose
+ASP programs are comprised of ``terms'', which can be Boolean atoms or a functions whose
 arguments may also be terms. A term followed by a period ({\tt .}) is called a ``fact''.
 The following is a simple program comprised entirely of facts:
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
@@ -145,7 +145,7 @@ makes this much simpler.
 
 %Writing
 %out the facts of our small program in SAT is hard enough, and we haven't even discussed
-%implementing optimization criteria in boolean logic. In ASP, though, it appears
+%implementing optimization criteria in Boolean logic. In ASP, though, it appears
 %reasonably straightforward and is legible to future maintainers of our code.
 
 \subsection{Grounding and Solving}
@@ -153,7 +153,7 @@ makes this much simpler.
 ASP solvers search the input program for {\it stable models}, also known as
 \textit{answer sets}. An answer set is a set of true atoms for which every rule in the
 input program is idempotent. It is similar to a fixed point, or the solution to a system
-of (boolean) equations. When ASP first emerged in the late 1990's, it used custom solvers.
+of (Boolean) equations. When ASP first emerged in the late 1990's, it used custom solvers.
 However, the problem domain of ASP is NP-complete, and the 2000's brought great
 advances~\cite{moskewicz2001chaff} in solving the canonical NP-complete problem: Boolean
 satisfiability (SAT). Modern ASP solvers exploit high-performance techniques developed
