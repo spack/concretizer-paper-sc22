@@ -134,13 +134,13 @@ packages and versions.'' A detailed discussion of the syntax for optimization is
 the scope of this paper; it suffices to know that multi-objective optimization across a
 variety of criteria is possible in ASP.
 
-Our small and very incomplete program here already shows the power of ASP. In a SAT
+This small and very incomplete program already shows the power of ASP. In a SAT
 solver, the programmer would need to write out explicitly the rule for deriving
 dependency nodes from dependent nodes for every possible pair of packages. Even worse,
 our choice rule for selecting versions would need to be written out for every
-combination of package and version, and an enormous combination of logical operators
-constructed to ensure that for any group of versions \texttt{$a_1, ..., a_n$}, one of
-the constructions \texttt{$a_i$} and not any \texttt{$a_j$} for all $i\neq{j}$. ASP
+combination of package and version, along with a combinatorial set of clauses
+ensuring that for any versions \texttt{$a_1, ..., a_n$}, exactly one
+\texttt{$a_i$} is set but not any \texttt{$a_j$} for all $i\neq{j}$. ASP
 makes this much simpler.
 
 %Writing

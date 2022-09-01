@@ -96,7 +96,7 @@ A user's choice will force the target of a node:
 node_target(P, T) :- node(P), node_target_set(P, T).
 \end{minted}
 %
-An integrity constraints prevents choosing a target not supported by the current compiler:
+An integrity constraint prevents choosing targets not supported by the chosen compiler:
 %
 \begin{minted}[fontsize=\small, bgcolor=bg]{prolog}
 :- node_target(P, T),

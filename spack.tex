@@ -190,14 +190,14 @@ concretize the abstract spec:
 example@1.0.0 ^zlib@1.2.11
 \end{minted}
 We will assume for the moment that neither \texttt{zlib} nor \texttt{bzip2} have any
-additional dependencies. Then the set of package constraints needed for this
-abstract spec is
+additional dependencies. The solver needs to consider contraints from package files
+and from the abstract spec supplied on the command line. Here, those constraints are:
 
 \begin{itemize}
-\item {\tt example@1.0.0} from the abstract spec: example v1.0.0
-\item {\tt bzip2@1.0.7:} from {\tt example}: bzip2 v1.0.7 or higher
-\item {\tt zlib@1.2.11} from abstract spec: zlib version 1.2.11
-\item {\tt mpi} from {\tt example} package: any MPI implementation
+\item {\tt example@1.0.0} from the abstract spec: ``example v1.0.0''
+\item {\tt bzip2@1.0.7:} from {\tt example}: ``bzip2 v1.0.7 or higher''
+\item {\tt zlib@1.2.11} from abstract spec: ``zlib version 1.2.11''
+\item {\tt mpi} from {\tt example}: ``any MPI implementation''
 \end{itemize}
 
 The original concretizer would simply proceed until all decisions had been made,
@@ -229,8 +229,8 @@ instructions, e.g., {\tt skylake} or {\tt cascadelake} with AVX-512 support vs. 
 according to some set of formal criteria. Since the original concretizer was not
 complete, it also could not be optimal, as it could never consider all possibilities.
 Note that this definition of optimality does {\it not} refer to the performance of built
-binaries, though it may be related depending on the criteria chosen. We discuss details
-of specific optimization criteria in later sections.
+binaries, though it may be related depending on the criteria chosen (we discuss this
+in later sections).
 
 In addition to these issues, the original concretizer was implemented directly on the
 dependency graph structure in memory. Any new semantics had to be implemented with
